@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+env/
+venv/
+ENV/
+
+# Project Specific
+bot_state.json
+.env
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
