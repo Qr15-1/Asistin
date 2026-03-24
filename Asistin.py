@@ -276,8 +276,9 @@ bot.set_my_commands([
 ])
 
 def reloj():
-    schedule.every().day.at("10:00").do(enviar_recordatorio_diario)
-    tiempos_alerta = ["12:00", "16:00", "18:00"]
+    # Horarios en UTC (Venezuela = UTC-4, se suma +4h)
+    schedule.every().day.at("14:00").do(enviar_recordatorio_diario)       # 10:00 AM Venezuela
+    tiempos_alerta = ["16:00", "20:00", "22:00"]                          # 12:00 / 16:00 / 18:00 Venezuela
     for t in tiempos_alerta:
         schedule.every().day.at(t).do(lambda: [
             bot.send_message(
@@ -285,7 +286,7 @@ def reloj():
                 f"RECORDATORIO {USUARIOS[info['user']]['alias']}: Pendiente informe para {m}."
             ) for m, info in cargar_datos()["reportes_hoy"].items() if info["status"] == "POR ENTREGA"
         ])
-    schedule.every().friday.at("17:00").do(lambda: bot.send_message(ID_GRUPO_OFICIAL, resumen_semanal_texto(cargar_datos())))
+    schedule.every().friday.at("21:00").do(lambda: bot.send_message(ID_GRUPO_OFICIAL, resumen_semanal_texto(cargar_datos())))  # 17:00 Venezuela
     while True: schedule.run_pending(); time.sleep(1)
 
 print("BOT REPORTIN ACTIVO")
