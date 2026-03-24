@@ -10,6 +10,11 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, ForceReply
 
 # CONFIGURACION
 def cargar_token():
+    # EasyPanel / Docker: leer desde variable de entorno
+    token_env = os.environ.get('BOT_TOKEN')
+    if token_env:
+        return token_env
+    # Fallback: archivo .env local
     if os.path.exists('.env'):
         with open('.env', 'r') as f:
             for line in f:
@@ -271,8 +276,8 @@ bot.set_my_commands([
 ])
 
 def reloj():
-    schedule.every().day.at("15:08").do(enviar_recordatorio_diario)
-    tiempos_alerta = ["10:00", "12:00", "16:00", "18:00"]
+    schedule.every().day.at("10:00").do(enviar_recordatorio_diario)
+    tiempos_alerta = ["12:00", "16:00", "18:00"]
     for t in tiempos_alerta:
         schedule.every().day.at(t).do(lambda: [
             bot.send_message(
