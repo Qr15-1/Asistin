@@ -38,8 +38,8 @@ ADMIN_IDS = [515198765, 5499547223]
 # CALENDARIOS
 # Calendario Semanal (Dia -> Responsable -> Marcas)
 CALENDARIO_SEMANAL = {
-    "Monday": { "R": ["Emiliarte", "Piso Uno"], "F": ["Agro PDK"] },
-    "Tuesday": { "R": ["Edmira", "Luva"], "F": ["+58 Shop", "La Zapeteria"] },
+    "Monday": { "R": ["Emiliarte",], "F": ["Agro PDK"] },
+    "Tuesday": { "R": ["Luva"], "F": ["+58 Shop", "La Zapeteria"] },
     "Wednesday": { "R": ["Altamar"], "F": [] },
     "Thursday": { "R": ["Dra. K Beauty"], "F": ["Bungerz"] },
     "Friday": { "R": ["La Cava", "Chocology"], "F": ["La Cascada"] }
@@ -47,14 +47,14 @@ CALENDARIO_SEMANAL = {
 
 # Calendario Mensual (Dia del mes DD -> Marcas)
 DIAS_MENSUALES = {
-    "03": ["Dra. K Beauty"],
-    "06": ["Piso Uno", "La Zapeteria"],
+    "03": ["Dra. K Beauty", "Agro PDK"],
+    "06": ["La Zapeteria"],
     "09": ["Bungerz"],
     "10": ["Emiliarte"],
     "12": ["La Cava", "Emiliarte", "La Cascada"],
     "13": ["Luva", "Altamar"],
     "15": ["Chaofan"],
-    "17": ["Edmira"],
+
     "18": ["+58 Shop"]
 }
 
@@ -189,7 +189,29 @@ def enviar_recordatorio_diario(forzar=False):
 def manejar_comandos(message):
     if message.from_user.id not in ADMIN_IDS: return
     datos = cargar_datos(); gestionar_tiempos(datos); text = message.text.lower()
-    if "/status" in text and "semanal" not in text and "mensual" not in text and "deuda" not in text:
+    if "/fechas_semanal" in text:
+        DIAS_ES = {"Monday": "Lunes", "Tuesday": "Martes", "Wednesday": "Miercoles", "Thursday": "Jueves", "Friday": "Viernes"}
+        res = "CALENDARIO SEMANAL DE ENTREGAS\n"
+        res += "----------------------------------\n"
+        for dia_en, asignaciones in CALENDARIO_SEMANAL.items():
+            res += f"\n {DIAS_ES.get(dia_en, dia_en)}:\n"
+            for resp, marcas in asignaciones.items():
+                if marcas:
+                    nombre = USUARIOS[resp]['nombre']
+                    res += f"  · {nombre}: {', '.join(marcas)}\n"
+        bot.send_message(message.chat.id, res)
+    elif "/fechas_mensual" in text:
+        res = "CALENDARIO MENSUAL DE ENTREGAS\n"
+        res += "----------------------------------\n"
+        for dia, marcas in sorted(DIAS_MENSUALES.items()):
+            marcas_con_resp = []
+            for m in marcas:
+                resp = obtener_responsable(m)
+                nombre = USUARIOS[resp]['nombre']
+                marcas_con_resp.append(f"{m} ({nombre})")
+            res += f"\n Dia {dia}: {', '.join(marcas_con_resp)}\n"
+        bot.send_message(message.chat.id, res)
+    elif "/status" in text and "semanal" not in text and "mensual" not in text and "deuda" not in text:
         res = "ESTATUS ACTUAL DE HOY:\n"
         res += "----------------------------------\n"
         for m, info in datos["reportes_hoy"].items():
@@ -272,6 +294,8 @@ bot.set_my_commands([
     telebot.types.BotCommand("/deuda", "Ver deudas pendientes"),
     telebot.types.BotCommand("/status_semanal", "Balance de la semana"),
     telebot.types.BotCommand("/status_mensual", "Acumulado del mes"),
+    telebot.types.BotCommand("/fechas_semanal", "Ver marcas por dia de la semana"),
+    telebot.types.BotCommand("/fechas_mensual", "Ver marcas por dia del mes"),
     telebot.types.BotCommand("/test_diario", "Probar envios")
 ])
 
