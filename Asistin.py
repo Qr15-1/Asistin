@@ -24,7 +24,7 @@ def cargar_token():
 
 TOKEN = cargar_token()
 bot = telebot.TeleBot(TOKEN)
-ID_GRUPO_OFICIAL = '-5138078545'
+ID_GRUPO_OFICIAL = '-1005138078545'
 
 USUARIOS = {
     "R": { "nombre": "Rebeca", "alias": "@Rebecaarh", "id": 5937374472 },
@@ -290,13 +290,14 @@ def procesar_justificacion(message, inicial, marca, original_msg_id):
 
 # MENU Y RELOJ DE ALERTAS
 bot.set_my_commands([
-    telebot.types.BotCommand("/status", "Estatus de hoy"),
-    telebot.types.BotCommand("/deuda", "Ver deudas pendientes"),
-    telebot.types.BotCommand("/status_semanal", "Balance de la semana"),
-    telebot.types.BotCommand("/status_mensual", "Acumulado del mes"),
-    telebot.types.BotCommand("/fechas_semanal", "Ver marcas por dia de la semana"),
-    telebot.types.BotCommand("/fechas_mensual", "Ver marcas por dia del mes"),
-    telebot.types.BotCommand("/test_diario", "Probar envios")
+    telebot.types.BotCommand("status", "Estatus de las entregas de hoy"),
+    telebot.types.BotCommand("deuda", "Ver deudas y reportes pendientes"),
+    telebot.types.BotCommand("status_semanal", "Balance de rendimiento semanal"),
+    telebot.types.BotCommand("status_mensual", "Resumen de semanas cerradas"),
+    telebot.types.BotCommand("fechas_semanal", "Marcas por día de la semana"),
+    telebot.types.BotCommand("fechas_mensual", "Marcas por día del mes"),
+    telebot.types.BotCommand("ver_mes", "Consultar historial (Ej: 03-2026)"),
+    telebot.types.BotCommand("test_diario", "Ejecutar prueba de envío (Admin)")
 ])
 
 def reloj():
@@ -315,4 +316,4 @@ def reloj():
 
 print("BOT REPORTIN ACTIVO")
 threading.Thread(target=reloj, daemon=True).start()
-bot.infinity_polling()
+bot.infinity_polling(timeout=10, long_polling_timeout=5)
