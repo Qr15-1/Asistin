@@ -24,7 +24,7 @@ def cargar_token():
 
 TOKEN = cargar_token()
 bot = telebot.TeleBot(TOKEN)
-ID_GRUPO_OFICIAL = '-1005138078545'
+ID_GRUPO_OFICIAL = '-1003860093839'
 
 USUARIOS = {
     "R": { "nombre": "Rebeca", "alias": "@Rebecaarh", "id": 5937374472 },
