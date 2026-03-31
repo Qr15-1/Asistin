@@ -169,22 +169,31 @@ def enviar_recordatorio_diario(forzar=False):
         resp = info["user"]; tipo = info["tipo"]
         datos.setdefault("tipos_semanales", {})[m] = tipo
         if m not in datos["deudas"][resp]: datos["deudas"][resp].append(m)
-        bot.send_message(
-            ID_GRUPO_OFICIAL, 
-            f"Responsable: {USUARIOS[resp]['alias']}\nMarca: {m} (Informe {tipo})\nEstatus: POR ENTREGA", 
-            reply_markup=menu_inicial(resp, m)
-        )
+        try:
+            bot.send_message(
+                ID_GRUPO_OFICIAL, 
+                f"Responsable: {USUARIOS[resp]['alias']}\nMarca: {m} (Informe {tipo})\nEstatus: POR ENTREGA", 
+                reply_markup=menu_inicial(resp, m)
+            )
+        except Exception as e:
+            print(f"Error al enviar menu {m}: {e}")
     for i in ["R", "F"]:
         marcas_de_hoy = [m for m, info in datos["reportes_hoy"].items() if info["user"] == i]
         deudas_viejas = [m for m in datos["deudas"][i] if m not in marcas_de_hoy]
         if deudas_viejas:
-            bot.send_message(ID_GRUPO_OFICIAL, f"----------------------------------\nMARCAS PENDIENTES DE DIAS ANTERIORES\nRESPONSABLE: {USUARIOS[i]['alias']}\n----------------------------------")
+            try: bot.send_message(ID_GRUPO_OFICIAL, f"----------------------------------\nMARCAS PENDIENTES DE DIAS ANTERIORES\nRESPONSABLE: {USUARIOS[i]['alias']}\n----------------------------------")
+            except: pass
             for m_deuda in deudas_viejas:
                 tipo_d = datos.get("tipos_semanales", {}).get(m_deuda, "SEMANAL")
-                bot.send_message(ID_GRUPO_OFICIAL, f"Marca: {m_deuda} (Informe {tipo_d})\nEstatus: POR ENTREGA", reply_markup=menu_inicial(i, m_deuda))
+                try: bot.send_message(ID_GRUPO_OFICIAL, f"Marca: {m_deuda} (Informe {tipo_d})\nEstatus: POR ENTREGA", reply_markup=menu_inicial(i, m_deuda))
+                except: pass
     datos["ultimo_envio"] = hoy_str; guardar_datos(datos)
 
 # COMANDOS
+@bot.message_handler(commands=['chatid'])
+def enviar_chat_id(message):
+    bot.reply_to(message, f"El ID de este chat es: {message.chat.id}")
+
 @bot.message_handler(func=lambda message: True)
 def manejar_comandos(message):
     if message.from_user.id not in ADMIN_IDS: return
@@ -300,19 +309,29 @@ bot.set_my_commands([
     telebot.types.BotCommand("test_diario", "Ejecutar prueba de envío (Admin)")
 ])
 
+def tarea_alertas():
+    try:
+        for m, info in cargar_datos()["reportes_hoy"].items():
+            if info["status"] == "POR ENTREGA":
+                try: bot.send_message(ID_GRUPO_OFICIAL, f"RECORDATORIO {USUARIOS[info['user']]['alias']}: Pendiente informe para {m}.")
+                except Exception as e: print(e)
+    except Exception as e: print(e)
+
+def tarea_viernes():
+    try: bot.send_message(ID_GRUPO_OFICIAL, resumen_semanal_texto(cargar_datos()))
+    except Exception as e: print(e)
+
 def reloj():
     # Horarios en UTC (Venezuela = UTC-4, se suma +4h)
-    schedule.every().day.at("14:00").do(enviar_recordatorio_diario)       # 10:00 AM Venezuela
+    schedule.every().day.at("14:00").do(lambda: [(enviar_recordatorio_diario() if True else None)])       # 10:00 AM Venezuela
     tiempos_alerta = ["16:00", "20:00", "22:00"]                          # 12:00 / 16:00 / 18:00 Venezuela
     for t in tiempos_alerta:
-        schedule.every().day.at(t).do(lambda: [
-            bot.send_message(
-                ID_GRUPO_OFICIAL, 
-                f"RECORDATORIO {USUARIOS[info['user']]['alias']}: Pendiente informe para {m}."
-            ) for m, info in cargar_datos()["reportes_hoy"].items() if info["status"] == "POR ENTREGA"
-        ])
-    schedule.every().friday.at("21:00").do(lambda: bot.send_message(ID_GRUPO_OFICIAL, resumen_semanal_texto(cargar_datos())))  # 17:00 Venezuela
-    while True: schedule.run_pending(); time.sleep(1)
+        schedule.every().day.at(t).do(tarea_alertas)
+    schedule.every().friday.at("21:00").do(tarea_viernes)  # 17:00 Venezuela
+    while True:
+        try: schedule.run_pending()
+        except Exception as e: print(f"Error schedule: {e}")
+        time.sleep(1)
 
 print("BOT REPORTIN ACTIVO")
 threading.Thread(target=reloj, daemon=True).start()
