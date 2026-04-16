@@ -365,7 +365,7 @@ def tarea_viernes():
 
 def reloj():
     # Horarios en UTC (Venezuela = UTC-4, se suma +4h)
-    schedule.every().day.at("14:00").do(lambda: [(enviar_recordatorio_diario() if True else None)])       # 10:00 AM Venezuela
+    schedule.every().day.at("15:00").do(enviar_recordatorio_diario)       # 11:00 AM Venezuela
     tiempos_alerta = ["16:00", "20:00", "22:00"]                          # 12:00 / 16:00 / 18:00 Venezuela
     for t in tiempos_alerta:
         schedule.every().day.at(t).do(tarea_alertas)
