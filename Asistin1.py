@@ -38,7 +38,7 @@ ADMIN_IDS = [515198765, 5499547223]
 # CALENDARIOS
 # Calendario Semanal (Dia -> Responsable -> Marcas)
 CALENDARIO_SEMANAL = {
-    "Monday": { "R": ["Emiliarte",], "F": ["Agro PDK"] },
+    "Monday": { "R": ["Emiliarte",], "F": ["Agro PDK"], "Roger": ["El Toque"] },
     "Tuesday": { "R": ["Luva"], "F": ["+58 Shop", "La Zapeteria"] },
     "Wednesday": { "R": ["Altamar"], "F": [] },
     "Thursday": { "R": ["Dra. K Beauty"], "F": ["Bungerz"] },
@@ -64,8 +64,8 @@ DATA_LOCK = threading.Lock()
 
 def cargar_datos():
     base = {
-        "reportes_hoy": {}, "deudas": {"R": [], "F": []}, "entregados": {"R": [], "F": []}, 
-        "inactivas": {"R": [], "F": []}, "historial_mensual": [], "archivo_historico": {},
+        "reportes_hoy": {}, "deudas": {"R": [], "F": [], "Roger": []}, "entregados": {"R": [], "F": [], "Roger": []}, 
+        "inactivas": {"R": [], "F": [], "Roger": []}, "historial_mensual": [], "archivo_historico": {},
         "ultimo_envio": "", "semana_id": datetime.now().strftime("%W"), "mes_id": datetime.now().strftime("%m"),
         "tipos_semanales": {}
     }
@@ -101,7 +101,7 @@ def gestionar_tiempos(datos):
         datos["historial_mensual"] = []; datos["mes_id"] = mes_act
     if sem_act != datos["semana_id"]:
         datos["historial_mensual"].append({"rango": obtener_rango_semana(), "entregados": datos["entregados"], "deudas": datos["deudas"]})
-        datos.update({"entregados": {"R": [], "F": []}, "deudas": {"R": [], "F": []}, "inactivas": {"R": [], "F": []}, "reportes_hoy": {}, "tipos_semanales": {}, "semana_id": sem_act})
+        datos.update({"entregados": {"R": [], "F": [], "Roger": []}, "deudas": {"R": [], "F": [], "Roger": []}, "inactivas": {"R": [], "F": [], "Roger": []}, "reportes_hoy": {}, "tipos_semanales": {}, "semana_id": sem_act})
     guardar_datos(datos)
 
 def obtener_responsable(marca):
@@ -129,7 +129,7 @@ def resumen_semanal_texto(datos):
     res = f"BALANCE SEMANAL DE RENDIMIENTO\n"
     res += f"PERIODO: {obtener_rango_semana()}\n"
     res += "----------------------------------\n"
-    for i in ["R", "F"]:
+    for i in ["R", "F", "Roger"]:
         res += f"\nRESPONSABLE: {USUARIOS[i]['nombre']}\n"
         ent_sem = []; ent_men = []
         pen_sem = []; pen_men = []
@@ -150,18 +150,49 @@ def resumen_semanal_texto(datos):
     return res
 
 # LOGICA DE ENVIO SEGUN CALENDARIO
+def es_fin_de_semana(fecha=None):
+    """Devuelve True si la fecha es sábado o domingo."""
+    if fecha is None:
+        fecha = datetime.now()
+    return fecha.weekday() >= 5  # 5=Sábado, 6=Domingo
+
+def proximo_lunes(fecha):
+    """Dado un sábado o domingo, devuelve el lunes siguiente."""
+    dias_hasta_lunes = (7 - fecha.weekday()) % 7
+    if dias_hasta_lunes == 0:
+        dias_hasta_lunes = 7
+    return fecha + timedelta(days=dias_hasta_lunes)
+
 def enviar_recordatorio_diario(forzar=False):
     datos = cargar_datos(); gestionar_tiempos(datos)
     ahora = datetime.now(); hoy_str = ahora.strftime("%Y-%m-%d"); dia_numero = ahora.strftime("%d")
     if not forzar and datos.get("ultimo_envio") == hoy_str: return
     dia_en = ahora.strftime("%A")
+
+    # BLOQUEO FIN DE SEMANA: no enviar nada sábado ni domingo
+    if es_fin_de_semana(ahora) and not forzar:
+        return
+
     bot.send_message(ID_GRUPO_OFICIAL, f"--- INICIO DE JORNADA: {ahora.strftime('%d/%m')} ---")
     datos["reportes_hoy"] = {}
     if dia_en in CALENDARIO_SEMANAL:
         for resp, marcas in CALENDARIO_SEMANAL[dia_en].items():
             for m in marcas:
                 datos["reportes_hoy"][m] = {"status": "POR ENTREGA", "user": resp, "tipo": "SEMANAL"}
+
+    # Verificar si hoy es lunes: agregar entregas mensuales que cayeron en finde
+    if dia_en == "Monday":
+        sabado = ahora - timedelta(days=2)
+        domingo = ahora - timedelta(days=1)
+        for fecha_finde in [sabado, domingo]:
+            dia_finde = fecha_finde.strftime("%d")
+            if dia_finde in DIAS_MENSUALES:
+                for m_mensual in DIAS_MENSUALES[dia_finde]:
+                    resp = obtener_responsable(m_mensual)
+                    datos["reportes_hoy"][m_mensual] = {"status": "POR ENTREGA", "user": resp, "tipo": "MENSUAL"}
+
     if dia_numero in DIAS_MENSUALES:
+        # Solo agregar si hoy NO es fin de semana (ya bloqueado arriba, pero por seguridad)
         for m_mensual in DIAS_MENSUALES[dia_numero]:
             resp = obtener_responsable(m_mensual)
             datos["reportes_hoy"][m_mensual] = {"status": "POR ENTREGA", "user": resp, "tipo": "MENSUAL"}
@@ -177,8 +208,7 @@ def enviar_recordatorio_diario(forzar=False):
             )
         except Exception as e:
             print(f"Error al enviar menu {m}: {e}")
-    for i in ["R", "F"]:
-        marcas_de_hoy = [m for m, info in datos["reportes_hoy"].items() if info["user"] == i]
+    for i in ["R", "F", "Roger"]:
         deudas_viejas = [m for m in datos["deudas"][i] if m not in marcas_de_hoy]
         if deudas_viejas:
             try: bot.send_message(ID_GRUPO_OFICIAL, f"----------------------------------\nMARCAS PENDIENTES DE DIAS ANTERIORES\nRESPONSABLE: {USUARIOS[i]['alias']}\n----------------------------------")
@@ -229,7 +259,7 @@ def manejar_comandos(message):
         bot.send_message(message.chat.id, res if datos["reportes_hoy"] else "Sin actividad hoy.")
     elif "/deuda" in text:
         hay_deuda = False
-        for i in ["R", "F"]:
+        for i in ["R", "F", "Roger"]:
             if datos["deudas"][i]:
                 hay_deuda = True
                 bot.send_message(message.chat.id, f"PENDIENTES DE {USUARIOS[i]['nombre']}:")
@@ -246,7 +276,7 @@ def manejar_comandos(message):
         else:
             res = "RESUMEN MENSUAL (SEMANAS CERRADAS):\n\n"
             for s in datos["historial_mensual"]: 
-                res += f"Semana {s['rango']}: {len(s['entregados']['R'])+len(s['entregados']['F'])} OK\n"
+                res += f"Semana {s['rango']}: {len(s['entregados']['R'])+len(s['entregados']['F'])+len(s['entregados'].get('Roger', []))} OK\n"
             bot.send_message(message.chat.id, res)
     elif "/ver_mes" in text:
         partes = text.split()
@@ -310,6 +340,9 @@ bot.set_my_commands([
 ])
 
 def tarea_alertas():
+    # No enviar alertas en fin de semana
+    if es_fin_de_semana():
+        return
     try:
         for m, info in cargar_datos()["reportes_hoy"].items():
             if info["status"] == "POR ENTREGA":
@@ -318,6 +351,8 @@ def tarea_alertas():
     except Exception as e: print(e)
 
 def tarea_viernes():
+    if es_fin_de_semana():
+        return
     try: bot.send_message(ID_GRUPO_OFICIAL, resumen_semanal_texto(cargar_datos()))
     except Exception as e: print(e)
 
