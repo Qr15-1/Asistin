@@ -173,6 +173,10 @@ def enviar_recordatorio_diario(forzar=False):
     if es_fin_de_semana(ahora) and not forzar:
         return
 
+    # Marcar como enviado antes de empezar para evitar bucles si hay error en el envío
+    datos["ultimo_envio"] = hoy_str
+    guardar_datos(datos)
+
     bot.send_message(ID_GRUPO_OFICIAL, f"--- INICIO DE JORNADA: {ahora.strftime('%d/%m')} ---")
     datos["reportes_hoy"] = {}
     if dia_en in CALENDARIO_SEMANAL:
@@ -196,6 +200,7 @@ def enviar_recordatorio_diario(forzar=False):
         for m_mensual in DIAS_MENSUALES[dia_numero]:
             resp = obtener_responsable(m_mensual)
             datos["reportes_hoy"][m_mensual] = {"status": "POR ENTREGA", "user": resp, "tipo": "MENSUAL"}
+    
     for m, info in datos["reportes_hoy"].items():
         resp = info["user"]; tipo = info["tipo"]
         datos.setdefault("tipos_semanales", {})[m] = tipo
@@ -208,6 +213,8 @@ def enviar_recordatorio_diario(forzar=False):
             )
         except Exception as e:
             print(f"Error al enviar menu {m}: {e}")
+
+    marcas_de_hoy = list(datos["reportes_hoy"].keys())
     for i in ["R", "F", "Roger"]:
         deudas_viejas = [m for m in datos["deudas"][i] if m not in marcas_de_hoy]
         if deudas_viejas:
@@ -217,7 +224,7 @@ def enviar_recordatorio_diario(forzar=False):
                 tipo_d = datos.get("tipos_semanales", {}).get(m_deuda, "SEMANAL")
                 try: bot.send_message(ID_GRUPO_OFICIAL, f"Marca: {m_deuda} (Informe {tipo_d})\nEstatus: POR ENTREGA", reply_markup=menu_inicial(i, m_deuda))
                 except: pass
-    datos["ultimo_envio"] = hoy_str; guardar_datos(datos)
+    guardar_datos(datos)
 
 # COMANDOS
 @bot.message_handler(commands=['chatid'])
