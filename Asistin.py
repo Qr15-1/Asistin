@@ -55,7 +55,8 @@ DIAS_MENSUALES = {
     "13": ["Luva", "Altamar"],
     "15": ["Chaofan"],
 
-    "18": ["+58 Shop"]
+    "18": ["+58 Shop"],
+    "25": ["Pizza De Verdad"]
 }
 
 # MEMORIA (bot_state.json)
