@@ -30,7 +30,7 @@ USUARIOS = {
     "R": { "nombre": "Rebeca", "alias": "@Rebecaarh", "id": 5937374472 },
     "F": { "nombre": "Franklin", "alias": "@Franklinjlopezr", "id": 975494788 },
     "Jefe": { "nombre": "Jonathan", "alias": "@JonathanSchemel", "id": 515198765 },
-    "Roger": { "nombre": "Roger", "id": 5499547223 }
+    "Roger": { "nombre": "Roger", "alias": "@RogerAQA", "id": 5499547223 }
 }
 
 ADMIN_IDS = [515198765, 5499547223]
@@ -38,11 +38,11 @@ ADMIN_IDS = [515198765, 5499547223]
 # CALENDARIOS
 # Calendario Semanal (Dia -> Responsable -> Marcas)
 CALENDARIO_SEMANAL = {
-    "Monday": { "R": ["Emiliarte",], "F": ["Agro PDK"], "Roger": ["El Toque"] },
+    "Monday": { "R": ["Emiliarte",], "F": ["Agro PDK", "Pizza De Verdad"], "Roger": ["El Toque", "Osersa"] },
     "Tuesday": { "R": ["Luva"], "F": ["+58 Shop", "La Zapeteria"] },
     "Wednesday": { "R": ["Altamar"], "F": [] },
     "Thursday": { "R": ["Dra. K Beauty"], "F": ["Bungerz"] },
-    "Friday": { "R": ["La Cava", "Chocology"], "F": ["La Cascada"] }
+    "Friday": { "R": ["La Cava"], "F": ["La Cascada"] }
 }
 
 # Calendario Mensual (Dia del mes DD -> Marcas)
