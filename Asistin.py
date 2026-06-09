@@ -2,114 +2,14 @@ import telebot
 import schedule
 import time
 import threading
-import json
-import os
-from pathlib import Path
 from datetime import datetime, timedelta
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, ForceReply
 
-# CONFIGURACION
-def cargar_token():
-    # EasyPanel / Docker: leer desde variable de entorno
-    token_env = os.environ.get('BOT_TOKEN')
-    if token_env:
-        return token_env
-    # Fallback: archivo .env local
-    if os.path.exists('.env'):
-        with open('.env', 'r') as f:
-            for line in f:
-                if line.startswith('BOT_TOKEN='):
-                    return line.strip().split('=')[1]
-    return 'TU_TOKEN_AQUI'
-
-TOKEN = cargar_token()
-bot = telebot.TeleBot(TOKEN)
-ID_GRUPO_OFICIAL = '-1003860093839'
-
-USUARIOS = {
-    "R": { "nombre": "Rebeca", "alias": "@Rebecaarh", "id": 5937374472 },
-    "F": { "nombre": "Franklin", "alias": "@Franklinjlopezr", "id": 975494788 },
-    "Jefe": { "nombre": "Jonathan", "alias": "@JonathanSchemel", "id": 515198765 },
-    "Roger": { "nombre": "Roger", "alias": "@RogerAQA", "id": 5499547223 }
-}
-
-ADMIN_IDS = [515198765, 5499547223]
-
-# CALENDARIOS
-# Calendario Semanal (Dia -> Responsable -> Marcas)
-CALENDARIO_SEMANAL = {
-    "Monday": { "R": ["Emiliarte",], "F": ["Agro PDK", "Pizza De Verdad"], "Roger": ["El Toque", "Osersa"] },
-    "Tuesday": { "R": ["Luva"], "F": ["+58 Shop", "La Zapeteria"] },
-    "Wednesday": { "R": ["Altamar"], "F": [] },
-    "Thursday": { "R": ["Dra. K Beauty"], "F": ["Bungerz"] },
-    "Friday": { "R": ["La Cava"], "F": ["La Cascada"] }
-}
-
-# Calendario Mensual (Dia del mes DD -> Marcas)
-DIAS_MENSUALES = {
-    "03": ["Dra. K Beauty", "Agro PDK"],
-    "06": ["La Zapeteria"],
-    "09": ["Bungerz"],
-    "10": ["Emiliarte"],
-    "12": ["La Cava", "Emiliarte", "La Cascada"],
-    "13": ["Luva", "Altamar"],
-    "15": ["Chaofan"],
-
-    "18": ["+58 Shop"],
-    "25": ["Pizza De Verdad"]
-}
-
-# MEMORIA (bot_state.json)
-STATE_PATH = Path(__file__).with_name("bot_state.json")
-DATA_LOCK = threading.Lock()
-
-def cargar_datos():
-    base = {
-        "reportes_hoy": {}, "deudas": {"R": [], "F": [], "Roger": []}, "entregados": {"R": [], "F": [], "Roger": []}, 
-        "inactivas": {"R": [], "F": [], "Roger": []}, "historial_mensual": [], "archivo_historico": {},
-        "ultimo_envio": "", "semana_id": datetime.now().strftime("%W"), "mes_id": datetime.now().strftime("%m"),
-        "tipos_semanales": {}
-    }
-    with DATA_LOCK:
-        if not STATE_PATH.exists(): return base
-        try:
-            with open(STATE_PATH, "r") as f:
-                datos = json.load(f)
-                for k in base: datos.setdefault(k, base[k])
-                return datos
-        except: return base
-
-def guardar_datos(datos):
-    with DATA_LOCK:
-        try:
-            with open(STATE_PATH, "w") as f: 
-                json.dump(datos, f, indent=2)
-        except: pass
-
-# UTILIDADES
-def obtener_hora_actual(): return datetime.now().strftime("%I:%M %p")
-
-def obtener_rango_semana():
-    hoy = datetime.now()
-    l = hoy - timedelta(days=hoy.weekday()); v = l + timedelta(days=4)
-    return f"DEL {l.strftime('%d/%m')} AL {v.strftime('%d/%m')}"
-
-def gestionar_tiempos(datos):
-    hoy = datetime.now(); sem_act = hoy.strftime("%W"); mes_act = hoy.strftime("%m"); anio_act = hoy.strftime("%Y")
-    if mes_act != datos["mes_id"]:
-        etiqueta = f"{datos['mes_id']}-{anio_act}"
-        datos["archivo_historico"][etiqueta] = list(datos["historial_mensual"])
-        datos["historial_mensual"] = []; datos["mes_id"] = mes_act
-    if sem_act != datos["semana_id"]:
-        datos["historial_mensual"].append({"rango": obtener_rango_semana(), "entregados": datos["entregados"], "deudas": datos["deudas"]})
-        datos.update({"entregados": {"R": [], "F": [], "Roger": []}, "deudas": {"R": [], "F": [], "Roger": []}, "inactivas": {"R": [], "F": [], "Roger": []}, "reportes_hoy": {}, "tipos_semanales": {}, "semana_id": sem_act})
-    guardar_datos(datos)
-
-def obtener_responsable(marca):
-    for dia, asignaciones in CALENDARIO_SEMANAL.items():
-        for resp, lista_marcas in asignaciones.items():
-            if marca in lista_marcas: return resp
-    return "F"
+# Importaciones modulares
+from bot import bot
+from config import TOKEN, ID_GRUPO_OFICIAL, USUARIOS, ADMIN_IDS, CALENDARIO_SEMANAL, DIAS_MENSUALES
+from state_manager import cargar_datos, guardar_datos, gestionar_tiempos, obtener_responsable
+from utils import obtener_hora_actual, obtener_rango_semana, es_fin_de_semana, proximo_lunes
 
 # MENUS
 def menu_inicial(inicial, marca):
@@ -151,19 +51,6 @@ def resumen_semanal_texto(datos):
     return res
 
 # LOGICA DE ENVIO SEGUN CALENDARIO
-def es_fin_de_semana(fecha=None):
-    """Devuelve True si la fecha es sábado o domingo."""
-    if fecha is None:
-        fecha = datetime.now()
-    return fecha.weekday() >= 5  # 5=Sábado, 6=Domingo
-
-def proximo_lunes(fecha):
-    """Dado un sábado o domingo, devuelve el lunes siguiente."""
-    dias_hasta_lunes = (7 - fecha.weekday()) % 7
-    if dias_hasta_lunes == 0:
-        dias_hasta_lunes = 7
-    return fecha + timedelta(days=dias_hasta_lunes)
-
 def enviar_recordatorio_diario(forzar=False):
     datos = cargar_datos(); gestionar_tiempos(datos)
     ahora = datetime.now(); hoy_str = ahora.strftime("%Y-%m-%d"); dia_numero = ahora.strftime("%d")
@@ -197,7 +84,6 @@ def enviar_recordatorio_diario(forzar=False):
                     datos["reportes_hoy"][m_mensual] = {"status": "POR ENTREGA", "user": resp, "tipo": "MENSUAL"}
 
     if dia_numero in DIAS_MENSUALES:
-        # Solo agregar si hoy NO es fin de semana (ya bloqueado arriba, pero por seguridad)
         for m_mensual in DIAS_MENSUALES[dia_numero]:
             resp = obtener_responsable(m_mensual)
             datos["reportes_hoy"][m_mensual] = {"status": "POR ENTREGA", "user": resp, "tipo": "MENSUAL"}
