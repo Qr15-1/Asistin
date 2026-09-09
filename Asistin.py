@@ -11,18 +11,31 @@ from config import TOKEN, ID_GRUPO_OFICIAL, USUARIOS, ADMIN_IDS, CALENDARIO_SEMA
 from state_manager import cargar_datos, guardar_datos, gestionar_tiempos, obtener_responsable
 from utils import obtener_hora_actual, obtener_rango_semana, es_fin_de_semana, proximo_lunes
 
+# HELPER DE ESTRUCTURA
+def obtener_item_info(item, datos=None):
+    """Normaliza cualquier elemento de deudas o entregados a tupla (marca, tipo)."""
+    if isinstance(item, dict):
+        return item.get("marca", ""), item.get("tipo", "SEMANAL")
+    if isinstance(item, str):
+        if "|" in item:
+            partes = item.split("|", 1)
+            return partes[0], partes[1]
+        tipo = datos.get("tipos_semanales", {}).get(item, "SEMANAL") if datos else "SEMANAL"
+        return item, tipo
+    return str(item), "SEMANAL"
+
 # MENUS
-def menu_inicial(inicial, marca):
+def menu_inicial(inicial, marca, tipo="SEMANAL"):
     m = InlineKeyboardMarkup(row_width=1)
-    m.add(InlineKeyboardButton("Ya lo envie", callback_data=f"si_{inicial}_{marca}"),
-          InlineKeyboardButton("Tengo retraso", callback_data=f"re_menu_{inicial}_{marca}"),
-          InlineKeyboardButton("Marca no disponible", callback_data=f"off_{inicial}_{marca}"))
+    m.add(InlineKeyboardButton("Ya lo envie", callback_data=f"si_{inicial}_{marca}_{tipo}"),
+          InlineKeyboardButton("Tengo retraso", callback_data=f"re_menu_{inicial}_{marca}_{tipo}"),
+          InlineKeyboardButton("Marca no disponible", callback_data=f"off_{inicial}_{marca}_{tipo}"))
     return m
 
-def menu_trabajando(inicial, marca):
+def menu_trabajando(inicial, marca, tipo="SEMANAL"):
     m = InlineKeyboardMarkup(row_width=1)
-    m.add(InlineKeyboardButton("Hecho: Ya lo envie", callback_data=f"si_{inicial}_{marca}"),
-          InlineKeyboardButton("Cambio: No podre hoy", callback_data=f"noh_{inicial}_{marca}"))
+    m.add(InlineKeyboardButton("Hecho: Ya lo envie", callback_data=f"si_{inicial}_{marca}_{tipo}"),
+          InlineKeyboardButton("Cambio: No podre hoy", callback_data=f"noh_{inicial}_{marca}_{tipo}"))
     return m
 
 # REPORTES (TEXTOS)
@@ -34,12 +47,12 @@ def resumen_semanal_texto(datos):
         res += f"\nRESPONSABLE: {USUARIOS[i]['nombre']}\n"
         ent_sem = []; ent_men = []
         pen_sem = []; pen_men = []
-        for m in datos['entregados'][i]:
-            tipo = datos.get("tipos_semanales", {}).get(m, "SEMANAL")
+        for item in datos['entregados'].get(i, []):
+            m, tipo = obtener_item_info(item, datos)
             if tipo == "MENSUAL": ent_men.append(m)
             else: ent_sem.append(m)
-        for m in datos['deudas'][i]:
-            tipo = datos.get("tipos_semanales", {}).get(m, "SEMANAL")
+        for item in datos['deudas'].get(i, []):
+            m, tipo = obtener_item_info(item, datos)
             if tipo == "MENSUAL": pen_men.append(m)
             else: pen_sem.append(m)
         res += f"ENTREGADOS SEMANALES: {', '.join(ent_sem) if ent_sem else 'Ninguno'}\n"
@@ -91,25 +104,27 @@ def enviar_recordatorio_diario(forzar=False):
     for m, info in datos["reportes_hoy"].items():
         resp = info["user"]; tipo = info["tipo"]
         datos.setdefault("tipos_semanales", {})[m] = tipo
-        if m not in datos["deudas"][resp]: datos["deudas"][resp].append(m)
+        deuda_item = {"marca": m, "tipo": tipo}
+        if not any(obtener_item_info(x, datos) == (m, tipo) for x in datos["deudas"][resp]):
+            datos["deudas"][resp].append(deuda_item)
         try:
             bot.send_message(
                 ID_GRUPO_OFICIAL, 
                 f"Responsable: {USUARIOS[resp]['alias']}\nMarca: {m} (Informe {tipo})\nEstatus: POR ENTREGA", 
-                reply_markup=menu_inicial(resp, m)
+                reply_markup=menu_inicial(resp, m, tipo)
             )
         except Exception as e:
             print(f"Error al enviar menu {m}: {e}")
 
     marcas_de_hoy = list(datos["reportes_hoy"].keys())
     for i in ["R", "F", "Roger"]:
-        deudas_viejas = [m for m in datos["deudas"][i] if m not in marcas_de_hoy]
+        deudas_viejas = [x for x in datos["deudas"][i] if obtener_item_info(x, datos)[0] not in marcas_de_hoy]
         if deudas_viejas:
             try: bot.send_message(ID_GRUPO_OFICIAL, f"----------------------------------\nMARCAS PENDIENTES DE DIAS ANTERIORES\nRESPONSABLE: {USUARIOS[i]['alias']}\n----------------------------------")
             except: pass
-            for m_deuda in deudas_viejas:
-                tipo_d = datos.get("tipos_semanales", {}).get(m_deuda, "SEMANAL")
-                try: bot.send_message(ID_GRUPO_OFICIAL, f"Marca: {m_deuda} (Informe {tipo_d})\nEstatus: POR ENTREGA", reply_markup=menu_inicial(i, m_deuda))
+            for item_deuda in deudas_viejas:
+                m_deuda, tipo_d = obtener_item_info(item_deuda, datos)
+                try: bot.send_message(ID_GRUPO_OFICIAL, f"Marca: {m_deuda} (Informe {tipo_d})\nEstatus: POR ENTREGA", reply_markup=menu_inicial(i, m_deuda, tipo_d))
                 except: pass
     guardar_datos(datos)
 
@@ -157,9 +172,9 @@ def manejar_comandos(message):
             if datos["deudas"][i]:
                 hay_deuda = True
                 bot.send_message(message.chat.id, f"PENDIENTES DE {USUARIOS[i]['nombre']}:")
-                for m_deuda in datos["deudas"][i]:
-                    tipo_d = datos.get("tipos_semanales", {}).get(m_deuda, "SEMANAL")
-                    bot.send_message(message.chat.id, f"Marca: {m_deuda} ({tipo_d})", reply_markup=menu_inicial(i, m_deuda))
+                for item_deuda in datos["deudas"][i]:
+                    m_deuda, tipo_d = obtener_item_info(item_deuda, datos)
+                    bot.send_message(message.chat.id, f"Marca: {m_deuda} ({tipo_d})", reply_markup=menu_inicial(i, m_deuda, tipo_d))
         if not hay_deuda:
             bot.send_message(message.chat.id, "No existen deudas pendientes.")
     elif "semanal" in text:
@@ -185,37 +200,57 @@ def manejar_comandos(message):
 # CALLBACKS (BOTONES)
 @bot.callback_query_handler(func=lambda call: True)
 def manejar_botones(call):
-    datos = cargar_datos(); data = call.data.split("_")
-    accion, inicial, marca = data[0], data[-2], data[-1]
+    datos = cargar_datos()
+    data = call.data.split("_")
+    
+    # Parseo flexible para compatibilidad con botones nuevos (4+ partes) y legacy (3 partes)
+    if data[0] == "re" and len(data) >= 2 and data[1] == "menu":
+        accion = "re"
+        inicial = data[2] if len(data) >= 4 else data[-2]
+        tipo_inf = data[-1] if len(data) >= 5 else "SEMANAL"
+        marca = "_".join(data[3:-1]) if len(data) >= 5 else data[-1]
+    elif len(data) >= 4:
+        accion = data[0]
+        inicial = data[1]
+        tipo_inf = data[-1]
+        marca = "_".join(data[2:-1])
+    else:
+        accion = data[0]
+        inicial = data[-2]
+        marca = data[-1]
+        tipo_inf = datos.get("reportes_hoy", {}).get(marca, {}).get("tipo") or datos.get("tipos_semanales", {}).get(marca, "SEMANAL")
+
     if call.from_user.id != USUARIOS[inicial]["id"]:
         bot.answer_callback_query(call.id, "Acceso Denegado", show_alert=True); return
+    
     h = obtener_hora_actual(); j = USUARIOS['Jefe']['alias']; n = USUARIOS[inicial]['nombre']
-    tipo_inf = datos.get("tipos_semanales", {}).get(marca, "SEMANAL")
+    item_target = {"marca": marca, "tipo": tipo_inf}
+
     if accion == "si":
         bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
         if marca in datos["reportes_hoy"]: datos["reportes_hoy"][marca]["status"] = f"ENTREGADO ({h})"
-        if marca in datos["deudas"][inicial]: datos["deudas"][inicial].remove(marca)
-        if marca not in datos["entregados"][inicial]: datos["entregados"][inicial].append(marca)
+        datos["deudas"][inicial] = [x for x in datos["deudas"][inicial] if obtener_item_info(x, datos) != (marca, tipo_inf)]
+        if not any(obtener_item_info(x, datos) == (marca, tipo_inf) for x in datos["entregados"][inicial]):
+            datos["entregados"][inicial].append(item_target)
         bot.send_message(call.message.chat.id, f"ENTREGADO: {marca} (Informe {tipo_inf}) por {n}. CC: {j}")
     elif accion == "tra":
         if marca in datos["reportes_hoy"]: datos["reportes_hoy"][marca]["status"] = f"TRABAJANDO ({h})"
-        bot.edit_message_text(f"ESTATUS: Trabajando en {marca}. Responsable: {n}", call.message.chat.id, call.message.message_id, reply_markup=menu_trabajando(inicial, marca))
+        bot.edit_message_text(f"ESTATUS: Trabajando en {marca}. Responsable: {n}", call.message.chat.id, call.message.message_id, reply_markup=menu_trabajando(inicial, marca, tipo_inf))
     elif accion == "off":
         bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
         if marca in datos["reportes_hoy"]: datos["reportes_hoy"][marca]["status"] = f"INACTIVA ({h})"
-        if marca in datos["deudas"][inicial]: datos["deudas"][inicial].remove(marca)
+        datos["deudas"][inicial] = [x for x in datos["deudas"][inicial] if obtener_item_info(x, datos) != (marca, tipo_inf)]
         bot.send_message(call.message.chat.id, f"MARCA NO DISPONIBLE: {marca}. Reportado por {n}. CC: {j}")
     elif accion == "noh":
         msg = bot.send_message(call.message.chat.id, f"Escribe motivo de retraso para {marca}:", reply_markup=ForceReply(selective=True))
-        bot.register_next_step_handler(msg, procesar_justificacion, inicial, marca, call.message.message_id)
-    elif accion == "re" and data[1] == "menu":
-        m_re = InlineKeyboardMarkup(); m_re.add(InlineKeyboardButton("Trabajando en eso", callback_data=f"tra_{inicial}_{marca}"), InlineKeyboardButton("No podre hoy", callback_data=f"noh_{inicial}_{marca}"))
+        bot.register_next_step_handler(msg, procesar_justificacion, inicial, marca, call.message.message_id, tipo_inf)
+    elif accion == "re":
+        m_re = InlineKeyboardMarkup(); m_re.add(InlineKeyboardButton("Trabajando en eso", callback_data=f"tra_{inicial}_{marca}_{tipo_inf}"), InlineKeyboardButton("No podre hoy", callback_data=f"noh_{inicial}_{marca}_{tipo_inf}"))
         bot.edit_message_text(f"Opciones para {marca}:", call.message.chat.id, call.message.message_id, reply_markup=m_re)
     guardar_datos(datos)
 
-def procesar_justificacion(message, inicial, marca, original_msg_id):
+def procesar_justificacion(message, inicial, marca, original_msg_id, tipo_inf="SEMANAL"):
     datos = cargar_datos(); h = obtener_hora_actual()
-    tipo_inf = datos.get("tipos_semanales", {}).get(marca, "SEMANAL")
     bot.edit_message_reply_markup(message.chat.id, original_msg_id, reply_markup=None)
     if marca in datos["reportes_hoy"]: datos["reportes_hoy"][marca]["status"] = f"RETRASO: {message.text} ({h})"
     bot.send_message(message.chat.id, f"RETRASO: {marca} (Informe {tipo_inf}). Motivo: {message.text}. Resp: {USUARIOS[inicial]['nombre']}. CC: {USUARIOS['Jefe']['alias']}")
