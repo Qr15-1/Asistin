@@ -3,213 +3,454 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Asistin - Soft UI Dashboard</title>
+  <title>Asistin — Panel de Administración</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
+
+    * { box-sizing: border-box; }
+
     body {
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      background-color: #f1f5f9;
-      color: #0f172a;
+      font-family: 'IBM Plex Sans', 'Courier New', monospace;
+      background: #f5f5f0;
+      color: #1a1a1a;
+      font-size: 13px;
     }
 
-    .soft-card {
-      background: #ffffff;
-      border-radius: 24px;
-      box-shadow: 0 10px 30px -5px rgba(15, 23, 42, 0.04), 0 0 1px 1px rgba(15, 23, 42, 0.02);
-      border: 1px solid rgba(241, 245, 249, 0.9);
-      transition: all 0.2s ease-in-out;
+    h1, h2, h3 {
+      font-family: 'IBM Plex Sans', monospace;
+      letter-spacing: -0.02em;
     }
 
-    .soft-card:hover {
-      box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.07);
+    /* Layout */
+    .container { max-width: 1200px; margin: 0 auto; padding: 24px 20px; }
+
+    /* Barra superior */
+    .topbar {
+      background: rgba(26, 26, 26, 0.88);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      color: #f5f5f0;
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .topbar h1 {
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin: 0;
+    }
+    .topbar-tabs {
+      display: flex;
+      gap: 4px;
+    }
+    .nav-tab {
+      background: transparent;
+      border: 1px solid transparent;
+      color: #a8a8a0;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 12px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .nav-tab:hover {
+      color: #f5f5f0;
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .nav-tab.active {
+      color: #f5f5f0;
+      background: #2b2b28;
+      border-color: #4a4a45;
+    }
+    .topbar-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
     }
 
-    .dark-card {
-      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-      border-radius: 24px;
-      box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.25);
+    /* Botones */
+    .btn {
+      display: inline-block;
+      padding: 6px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      font-family: inherit;
+    }
+    .btn-dark {
+      background: rgba(255, 255, 255, 0.08);
+      color: #f5f5f0;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .btn-dark:hover { background: rgba(255, 255, 255, 0.18); border-color: rgba(255, 255, 255, 0.35); }
+
+    .btn-blue {
+      background: #2b2b28;
+      color: #f5f5f0;
+      border: 1px solid #4a4a45;
+    }
+    .btn-blue:hover { background: #1a1a18; border-color: #1a1a18; }
+
+    .btn-neutral {
+      background: #e5e5e0;
+      color: #1a1a1a;
+      border: 1px solid #ccc;
+    }
+    .btn-neutral:hover { background: #d5d5d0; }
+
+    .btn-red {
+      background: #fff;
+      color: #dc2626;
+      border: 1px solid #dc2626;
+    }
+    .btn-red:hover { background: #dc2626; color: #fff; }
+
+    /* Sección */
+    .section {
+      background: #fff;
+      border: 1px solid #d4d4c8;
+      margin-bottom: 16px;
+    }
+    .section-header {
+      background: #f0f0ea;
+      border-bottom: 1px solid #d4d4c8;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .section-header h2 {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #333;
+      margin: 0;
+    }
+    .section-body { padding: 16px; }
+
+    /* Métricas */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+      background: #d4d4c8;
+      border: 1px solid #d4d4c8;
+      margin-bottom: 16px;
+    }
+    .metric-cell {
+      background: #fff;
+      padding: 14px 16px;
+    }
+    .metric-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #666;
+      display: block;
+      margin-bottom: 6px;
+    }
+    .metric-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: #1a1a1a;
+      line-height: 1;
+    }
+    .metric-sub {
+      font-size: 11px;
+      color: #888;
+      margin-top: 4px;
     }
 
-    .pill-active {
-      background-color: #0f172a;
-      color: #ffffff;
-      border-radius: 9999px;
-      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
+    /* Tabla */
+    table { width: 100%; border-collapse: collapse; }
+    thead tr {
+      background: #f0f0ea;
+      border-bottom: 2px solid #d4d4c8;
+    }
+    th {
+      padding: 8px 12px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #555;
+      white-space: nowrap;
+    }
+    td {
+      padding: 9px 12px;
+      border-bottom: 1px solid #e8e8e0;
+      vertical-align: middle;
+      color: #1a1a1a;
+    }
+    tr:hover td { background: #fafaf5; }
+    tr:last-child td { border-bottom: none; }
+
+    /* Selects */
+    select, input[type="text"], input[type="number"] {
+      font-family: inherit;
+      font-size: 12px;
+      padding: 4px 8px;
+      border: 1px solid #ccc;
+      background: #fff;
+      color: #1a1a1a;
+      outline: none;
+    }
+    select:focus, input:focus { border-color: #1a1a1a; }
+
+    /* Badge estado */
+    .badge-activa {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      color: #166534;
+    }
+    .badge-pausada {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      color: #666;
     }
 
-    .pill-inactive {
-      color: #64748b;
-      border-radius: 9999px;
-      transition: all 0.15s ease;
+    /* Filtros */
+    .filtros-bar {
+      display: flex;
+      gap: 8px;
+      align-items: center;
     }
-    .pill-inactive:hover {
-      color: #0f172a;
-      background-color: rgba(241, 245, 249, 0.8);
-    }
-
-    .switch-checkbox:checked + .switch-label {
-      background-color: #2563eb;
-    }
-    .switch-checkbox:checked + .switch-label .switch-dot {
-      transform: translateX(1.35rem);
+    .filtros-bar input, .filtros-bar select {
+      height: 30px;
     }
 
-    .glass-effect {
-      background: rgba(255, 255, 255, 0.75);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.5);
+    /* Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-box {
+      background: #fff;
+      border: 2px solid #1a1a1a;
+      width: 100%;
+      max-width: 560px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .modal-header {
+      background: #1a1a1a;
+      color: #f5f5f0;
+      padding: 10px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .modal-header h3 {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin: 0;
+    }
+    .modal-close {
+      background: none;
+      border: none;
+      color: #f5f5f0;
+      font-size: 16px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .modal-body { padding: 20px; }
+    .modal-footer {
+      padding: 12px 20px;
+      border-top: 1px solid #d4d4c8;
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    /* Form rows */
+    .form-row { margin-bottom: 14px; }
+    .form-row label {
+      display: block;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #555;
+      margin-bottom: 5px;
+    }
+    .form-row input, .form-row select { width: 100%; height: 32px; }
+
+    /* Calendarios de días */
+    .dias-semana-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
+      margin-top: 4px;
+    }
+    .dia-btn {
+      padding: 7px 4px;
+      text-align: center;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid #ccc;
+      background: #f5f5f0;
+      font-family: inherit;
+      user-select: none;
+    }
+    .dia-btn.selected {
+      background: #1a1a1a;
+      color: #f5f5f0;
+      border-color: #1a1a1a;
+    }
+    .dia-btn:hover:not(.selected) { background: #e5e5e0; }
+
+    .dias-mes-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+      margin-top: 4px;
+    }
+    .dia-mes-btn {
+      padding: 6px 2px;
+      text-align: center;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid #ccc;
+      background: #f5f5f0;
+      font-family: inherit;
+      user-select: none;
+    }
+    .dia-mes-btn.selected {
+      background: #1a1a1a;
+      color: #f5f5f0;
+      border-color: #1a1a1a;
+    }
+    .dia-mes-btn:hover:not(.selected) { background: #e5e5e0; }
+
+    /* Separator */
+    .sep {
+      height: 1px;
+      background: #e8e8e0;
+      margin: 16px 0;
+    }
+
+    /* Equipo */
+    .equipo-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: #d4d4c8;
+      border: 1px solid #d4d4c8;
+    }
+    .equipo-cell {
+      background: #fff;
+      padding: 12px 14px;
+    }
+    .equipo-nombre {
+      font-weight: 700;
+      font-size: 13px;
+      margin-bottom: 4px;
+    }
+    .equipo-sub { font-size: 11px; color: #666; }
+
+    /* Toast */
+    #toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #1a1a1a;
+      color: #f5f5f0;
+      padding: 10px 16px;
+      font-size: 12px;
+      font-weight: 600;
+      font-family: inherit;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 999;
+    }
+
+    @media (max-width: 768px) {
+      .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+      .equipo-grid { grid-template-columns: 1fr; }
+      .dias-mes-grid { grid-template-columns: repeat(5, 1fr); }
     }
   </style>
 </head>
-<body class="p-4 md:p-8 min-h-screen">
+<body>
 
-  <div class="max-w-7xl mx-auto space-y-6">
-
-    <!-- NAVBAR NIXTIO STYLE -->
-    <header class="soft-card glass-effect px-6 py-4 flex items-center justify-between">
-      <!-- LOGO -->
-      <div class="flex items-center space-x-3">
-        <div class="w-10 h-10 rounded-2xl bg-blue-600 flex items-center justify-center text-white font-extrabold text-xl shadow-lg shadow-blue-500/30">
-          A
-        </div>
-        <span class="text-xl font-bold tracking-tight text-slate-900">Asistin<span class="text-blue-600">.io</span></span>
-      </div>
-
-      <!-- NAVIGATION PILLS -->
-      <nav class="hidden md:flex items-center space-x-1 bg-slate-100/80 p-1.5 rounded-full border border-slate-200/60">
-        <a href="#" class="pill-active px-5 py-2 text-xs font-semibold tracking-wide">Dashboard</a>
-        <a href="#marcas" class="pill-inactive px-5 py-2 text-xs font-semibold tracking-wide">Gestión Marcas</a>
-        <a href="#kpis" class="pill-inactive px-5 py-2 text-xs font-semibold tracking-wide">Reportes & KPIs</a>
-      </nav>
-
-      <!-- QUICK CONTROLS BAR -->
-      <div class="flex items-center space-x-2 bg-slate-100/80 p-1.5 rounded-full border border-slate-200/60">
-        <button onclick="triggerTestNotification()" title="Disparar Test" class="w-9 h-9 rounded-full bg-white flex items-center justify-center text-slate-700 hover:text-blue-600 transition shadow-sm">
-          ⚡
-        </button>
-        <button title="Notificaciones" class="w-9 h-9 rounded-full bg-white flex items-center justify-center text-slate-700 relative shadow-sm">
-          🔔
-          <span class="absolute top-1 right-1 w-2 h-2 bg-blue-600 rounded-full animate-ping"></span>
-          <span class="absolute top-1 right-1 w-2 h-2 bg-blue-600 rounded-full"></span>
-        </button>
-        <div class="flex items-center space-x-2 pl-2 pr-3 border-l border-slate-200">
-          <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-bold flex items-center justify-center text-xs border border-blue-200">
-            RS
-          </div>
-          <span class="text-xs font-bold text-slate-800 hidden lg:inline">Roger S.</span>
-        </div>
-      </div>
-    </header>
-
-    <!-- WELCOME & SUMMARY HEADER -->
-    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 px-2">
-      <div>
-        <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight text-slate-900">
-          Welcome back, <span class="text-blue-600">Roger</span> 👋
-        </h1>
-        <p class="text-sm font-medium text-slate-500 mt-1">
-          Monitoreo en vivo de entregas y estatus de marcas para el bot de Telegram
-        </p>
-      </div>
-
-      <div class="flex items-center space-x-3">
-        <button onclick="abrirModalCrear()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md shadow-blue-500/20 transition flex items-center space-x-1">
-          <span>+ Nueva Marca</span>
-        </button>
-        <span class="inline-flex items-center px-4 py-2 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
-          <span class="w-2 h-2 rounded-full bg-emerald-500 mr-2 animate-pulse"></span> EasyPanel Bot Active
-        </span>
+  <!-- BARRA SUPERIOR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <h1>Asistin — Panel de Control</h1>
+      <div class="topbar-tabs">
+        <button class="nav-tab active" id="tabBtnMarcas" onclick="cambiarVista('marcas')">Gestión de Marcas</button>
+        <button class="nav-tab" id="tabBtnHistorial" onclick="cambiarVista('historial')">Historial de Semanas</button>
       </div>
     </div>
-
-    <!-- GRID TOP CARDS: 3 SOFT CARDS + 1 DARK CONTRAST CARD -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-5">
-      
-      <!-- KPI CARD 1 -->
-      <div class="soft-card p-6 flex flex-col justify-between space-y-4">
-        <div class="flex items-center justify-between">
-          <span class="text-xs font-semibold uppercase text-slate-400 tracking-wider">Cumplimiento Semanal</span>
-          <span class="px-2.5 py-1 bg-blue-50 text-blue-600 text-xs font-extrabold rounded-full" id="kpiCumplimientoPct">100%</span>
-        </div>
-        <div>
-          <div class="text-4xl font-extrabold text-slate-900 tracking-tight" id="kpiCumplimientoRatio">-- / --</div>
-          <p class="text-xs font-medium text-slate-400 mt-1">Entregas de la semana al día</p>
-        </div>
-        <!-- Progress Capsule -->
-        <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden p-0.5 border border-slate-200/50">
-          <div class="bg-blue-600 h-full rounded-full transition-all duration-500" id="kpiProgressCap" style="width: 100%"></div>
-        </div>
-      </div>
-
-      <!-- KPI CARD 2: CIRCULAR TRACKER / RITMO -->
-      <div class="soft-card p-6 flex items-center justify-between">
-        <div>
-          <span class="text-xs font-semibold uppercase text-slate-400 tracking-wider">Ritmo de Entregas</span>
-          <div class="text-3xl font-extrabold text-slate-900 mt-2">Óptimo</div>
-          <p class="text-xs font-medium text-emerald-600 mt-1">⚡ Sin retrasos hoy</p>
-        </div>
-        <!-- CIRCULAR TIMETRACKER WIDGET -->
-        <div class="relative w-16 h-16 flex items-center justify-center">
-          <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-            <path class="text-slate-100" stroke-width="3.5" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-            <path class="text-blue-600" stroke-dasharray="100, 100" stroke-width="3.5" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-          </svg>
-          <span class="absolute text-xs font-bold text-slate-800">100%</span>
-        </div>
-      </div>
-
-      <!-- KPI CARD 3: MARCAS ACTIVAS -->
-      <div class="soft-card p-6 flex flex-col justify-between space-y-4">
-        <div class="flex items-center justify-between">
-          <span class="text-xs font-semibold uppercase text-slate-400 tracking-wider">Marcas Activas</span>
-          <span class="px-2.5 py-1 bg-emerald-50 text-emerald-600 text-xs font-extrabold rounded-full">Operativas</span>
-        </div>
-        <div>
-          <div class="text-4xl font-extrabold text-slate-900 tracking-tight" id="activeCount">--</div>
-          <p class="text-xs font-medium text-slate-400 mt-1">Con recordatorios en Telegram</p>
-        </div>
-        <div class="text-xs font-semibold text-slate-500" id="inactiveCountText">
-          + 0 Marcas pausadas
-        </div>
-      </div>
-
-      <!-- DARK CONTRAST CARD (PRIORITY / ACTION TASK) -->
-      <div class="dark-card p-6 text-white flex flex-col justify-between space-y-4 relative overflow-hidden">
-        <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-blue-500/10 rounded-full blur-xl pointer-events-none"></div>
-        <div class="flex items-center justify-between">
-          <span class="text-xs font-bold uppercase tracking-wider text-blue-400">Acción Rápida</span>
-          <span class="w-2 h-2 rounded-full bg-blue-400 animate-ping"></span>
-        </div>
-        <div>
-          <h3 class="text-lg font-extrabold">Ejecutar Prueba</h3>
-          <p class="text-xs text-slate-300 mt-1">Envía una prueba de jornada completa al grupo oficial</p>
-        </div>
-        <button onclick="triggerTestNotification()" class="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl transition shadow-lg shadow-blue-600/30 tracking-wide">
-          DISPARAR TEST AHORA
-        </button>
-      </div>
-
+    <div class="topbar-actions">
+      <button class="btn btn-dark" onclick="triggerTestNotification()">Ejecutar Prueba</button>
+      <button class="btn btn-blue" id="btnNuevaMarcaHeader" onclick="abrirModal()">+ Nueva Marca</button>
     </div>
+  </div>
 
-    <!-- MAIN CONTENT: GESTION DE MARCAS + GRAFICO ESTADISTICO -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6" id="marcas">
+  <div class="container">
 
-      <!-- COLUMNA IZQUIERDA (2 COLS): TABLA SOFT UI GESTION DE MARCAS -->
-      <div class="lg:col-span-2 soft-card p-6 space-y-6">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h2 class="text-xl font-extrabold text-slate-900">Gestión de Marcas</h2>
-            <p class="text-xs font-medium text-slate-400 mt-0.5">Asigna responsables, cambia frecuencias y activa/pausa marcas</p>
-          </div>
+    <!-- VISTA 1: GESTION DE MARCAS -->
+    <div id="vistaMarcas">
 
-          <!-- CONTROLES FILTRO -->
-          <div class="flex items-center space-x-2">
-            <input type="text" id="searchInput" oninput="filterBrands()" placeholder="Buscar marca..." class="px-3.5 py-2 text-xs bg-slate-100 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 w-40">
-            <select id="userFilter" onchange="filterBrands()" class="px-3.5 py-2 text-xs bg-slate-100 border border-slate-200 rounded-xl focus:outline-none font-semibold text-slate-700">
+      <!-- METRICAS -->
+      <div class="metrics-grid">
+        <div class="metric-cell">
+          <span class="metric-label">Cumplimiento</span>
+          <div class="metric-value" id="kpiRatio">—</div>
+          <div class="metric-sub" id="kpiPct">entregas al dia</div>
+        </div>
+        <div class="metric-cell">
+          <span class="metric-label">Marcas Activas</span>
+          <div class="metric-value" id="activeCount">—</div>
+          <div class="metric-sub">notificaciones habilitadas</div>
+        </div>
+        <div class="metric-cell">
+          <span class="metric-label">Marcas Pausadas</span>
+          <div class="metric-value" id="inactiveCount">—</div>
+          <div class="metric-sub">sin avisos activos</div>
+        </div>
+        <div class="metric-cell">
+          <span class="metric-label">Semanas Guardadas</span>
+          <div class="metric-value" id="historialCount">—</div>
+          <div class="metric-sub">en historial mensual</div>
+        </div>
+      </div>
+
+      <!-- LISTADO DE MARCAS -->
+      <div class="section">
+        <div class="section-header">
+          <h2>Listado de Marcas</h2>
+          <div class="filtros-bar">
+            <input type="text" id="searchInput" placeholder="Buscar por nombre..." oninput="filterBrands()" style="width:180px;">
+            <select id="userFilter" onchange="filterBrands()">
               <option value="ALL">Todos los responsables</option>
               <option value="R">Rebeca</option>
               <option value="F">Franklin</option>
@@ -217,361 +458,608 @@
             </select>
           </div>
         </div>
-
-        <!-- TABLA -->
-        <div class="overflow-x-auto">
-          <table class="w-full text-left">
+        <div style="overflow-x:auto;">
+          <table>
             <thead>
-              <tr class="border-b border-slate-100 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                <th class="pb-3 px-2">Marca</th>
-                <th class="pb-3 px-2">Responsable Asignado</th>
-                <th class="pb-3 px-2">Frecuencia</th>
-                <th class="pb-3 px-2">Día</th>
-                <th class="pb-3 px-2 text-center">Estado</th>
-                <th class="pb-3 px-2 text-right">Acción / Switch</th>
+              <tr>
+                <th>Marca</th>
+                <th>Responsable</th>
+                <th>Dias Semanales</th>
+                <th>Dias Mensuales</th>
+                <th>Estado</th>
+                <th style="text-align:right;">Acciones</th>
               </tr>
             </thead>
-            <tbody id="brandsTableBody" class="divide-y divide-slate-100 text-xs font-medium text-slate-700">
-              <!-- JS Injected -->
-            </tbody>
+            <tbody id="brandsTableBody"></tbody>
           </table>
         </div>
       </div>
 
-      <!-- COLUMNA DERECHA (1 COL): RENDIMIENTO POR RESPONSABLE & CHARTS -->
-      <div class="space-y-6" id="kpis">
-        
-        <!-- CARD 1: RENDIMIENTO INDIVIDUAL -->
-        <div class="soft-card p-6 space-y-5">
-          <h3 class="text-lg font-extrabold text-slate-900">Rendimiento por Equipo</h3>
-          <div id="equipoContainer" class="space-y-4">
-            <!-- JS Injected -->
-          </div>
+      <!-- RENDIMIENTO POR EQUIPO -->
+      <div class="section">
+        <div class="section-header">
+          <h2>Resumen por Responsable</h2>
         </div>
-
-        <!-- CARD 2: GRAFICO BARRAS REDONDEADAS DE ENTREGAS -->
-        <div class="soft-card p-6 space-y-4">
-          <div class="flex items-center justify-between">
-            <h3 class="text-sm font-extrabold text-slate-900">Entregas Diarias (Semana)</h3>
-            <span class="text-xs font-semibold text-blue-600">Lunes a Viernes</span>
-          </div>
-
-          <!-- SIMULATION ROUNDED BARS -->
-          <div class="flex items-end justify-between h-28 pt-4 px-2">
-            <div class="flex flex-col items-center space-y-1">
-              <div class="w-6 bg-blue-600 rounded-full" style="height: 70px;"></div>
-              <span class="text-[10px] font-bold text-slate-400">Lun</span>
-            </div>
-            <div class="flex flex-col items-center space-y-1">
-              <div class="w-6 bg-blue-600 rounded-full" style="height: 90px;"></div>
-              <span class="text-[10px] font-bold text-slate-400">Mar</span>
-            </div>
-            <div class="flex flex-col items-center space-y-1">
-              <div class="w-6 bg-blue-600 rounded-full" style="height: 50px;"></div>
-              <span class="text-[10px] font-bold text-slate-400">Mié</span>
-            </div>
-            <div class="flex flex-col items-center space-y-1">
-              <div class="w-6 bg-blue-600 rounded-full" style="height: 60px;"></div>
-              <span class="text-[10px] font-bold text-slate-400">Jue</span>
-            </div>
-            <div class="flex flex-col items-center space-y-1">
-              <div class="w-6 bg-blue-600 rounded-full" style="height: 40px;"></div>
-              <span class="text-[10px] font-bold text-slate-400">Vie</span>
-            </div>
-          </div>
+        <div class="section-body" style="padding:0;">
+          <div class="equipo-grid" id="equipoContainer"></div>
         </div>
+      </div>
 
+    </div>
+
+    <!-- VISTA 2: HISTORIAL DE SEMANAS Y ENTREGAS -->
+    <div id="vistaHistorial" style="display:none;">
+
+      <div class="section">
+        <div class="section-header">
+          <h2>Historial de Semanas Cerradas (Mes Actual)</h2>
+          <button class="btn btn-neutral" style="font-size:11px;padding:3px 10px;" onclick="cargarHistorial()">Actualizar</button>
+        </div>
+        <div style="overflow-x:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>Semana</th>
+                <th>Período</th>
+                <th>Cumplimiento</th>
+                <th>Entregados</th>
+                <th>Pendientes</th>
+                <th>Detalle por Responsable</th>
+              </tr>
+            </thead>
+            <tbody id="historialTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ARCHIVO HISTÓRICO DE MESES ANTERIORES -->
+      <div class="section" id="seccionMesesArchivados" style="display:none;">
+        <div class="section-header">
+          <h2>Archivo de Meses Anteriores</h2>
+        </div>
+        <div class="section-body" id="mesesArchivadosContainer"></div>
       </div>
 
     </div>
 
   </div>
 
-  <!-- MODAL CREAR NUEVA MARCA -->
-  <div id="modalCrear" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
-    <div class="soft-card max-w-md w-full p-6 space-y-5 bg-white">
-      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-        <h3 class="text-lg font-extrabold text-slate-900">+ Agregar Nueva Marca</h3>
-        <button onclick="cerrarModalCrear()" class="text-slate-400 hover:text-slate-600 font-bold">✕</button>
+  <!-- MODAL NUEVA MARCA -->
+  <div class="modal-overlay" id="modalCrear">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>Agregar Nueva Marca</h3>
+        <button class="modal-close" onclick="cerrarModal()">✕</button>
       </div>
+      <div class="modal-body">
 
-      <div class="space-y-4 text-xs font-semibold">
-        <div>
-          <label class="block text-slate-600 mb-1">Nombre de la Marca</label>
-          <input type="text" id="nuevoNombre" placeholder="Ej: Mi Marca" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20">
+        <!-- Nombre -->
+        <div class="form-row">
+          <label>Nombre de la Marca</label>
+          <input type="text" id="nuevoNombre" placeholder="Nombre de la marca">
         </div>
 
-        <div>
-          <label class="block text-slate-600 mb-1">Responsable Asignado</label>
-          <select id="nuevoResp" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none font-semibold">
-            <option value="R">Rebeca (@Rebecaarh)</option>
-            <option value="F">Franklin (@Franklinjlopezr)</option>
-            <option value="Roger">Roger (@RogerAQA)</option>
+        <!-- Responsable -->
+        <div class="form-row">
+          <label>Responsable Asignado</label>
+          <select id="nuevoResp">
+            <option value="R">Rebeca</option>
+            <option value="F">Franklin</option>
+            <option value="Roger">Roger</option>
           </select>
         </div>
 
-        <div>
-          <label class="block text-slate-600 mb-1">Frecuencia</label>
-          <select id="nuevaFreq" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none font-semibold">
-            <option value="Semanal">Semanal</option>
-            <option value="Mensual">Mensual</option>
-            <option value="Semanal + Mensual">Semanal + Mensual</option>
-          </select>
+        <div class="sep"></div>
+
+        <!-- CALENDARIO SEMANAL -->
+        <div class="form-row">
+          <label>Dias de entrega semanal <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#888;">(selecciona uno o varios)</span></label>
+          <div class="dias-semana-grid">
+            <button type="button" class="dia-btn" data-dia="Monday" onclick="toggleDiaSemana(this)">Lun</button>
+            <button type="button" class="dia-btn" data-dia="Tuesday" onclick="toggleDiaSemana(this)">Mar</button>
+            <button type="button" class="dia-btn" data-dia="Wednesday" onclick="toggleDiaSemana(this)">Mie</button>
+            <button type="button" class="dia-btn" data-dia="Thursday" onclick="toggleDiaSemana(this)">Jue</button>
+            <button type="button" class="dia-btn" data-dia="Friday" onclick="toggleDiaSemana(this)">Vie</button>
+          </div>
         </div>
 
-        <div>
-          <label class="block text-slate-600 mb-1">Día de Entrega</label>
-          <input type="text" id="nuevoDia" placeholder="Ej: Lunes o Día 15" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none">
+        <div class="sep"></div>
+
+        <!-- CALENDARIO MENSUAL -->
+        <div class="form-row">
+          <label>Dias de entrega mensual <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#888;">(dia del mes, selecciona uno o varios)</span></label>
+          <div class="dias-mes-grid" id="diasMesGrid"></div>
         </div>
+
       </div>
-
-      <div class="flex items-center justify-end space-x-2 pt-2 border-t border-slate-100">
-        <button onclick="cerrarModalCrear()" class="px-4 py-2 bg-slate-100 text-slate-600 hover:bg-slate-200 font-bold text-xs rounded-xl">Cancelar</button>
-        <button onclick="guardarNuevaMarca()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md shadow-blue-500/20">Guardar Marca</button>
+      <div class="modal-footer">
+        <button class="btn btn-neutral" onclick="cerrarModal()">Cancelar</button>
+        <button class="btn btn-blue" onclick="guardarNuevaMarca()">Guardar Marca</button>
       </div>
     </div>
   </div>
 
-  <!-- TOAST SOFT UI -->
-  <div id="toast" class="fixed bottom-6 right-6 bg-slate-900 text-white px-5 py-3.5 rounded-2xl shadow-2xl opacity-0 transition-opacity duration-300 pointer-events-none text-xs font-bold flex items-center space-x-3 border border-slate-700">
-    <span class="text-emerald-400">✓</span>
-    <span id="toastMsg">Acción completada</span>
+  <!-- MODAL EDITAR MARCA -->
+  <div class="modal-overlay" id="modalEditar">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="modalEditarTitulo">Editar Ficha de Marca</h3>
+        <button class="modal-close" onclick="cerrarModalEditar()">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="editarNombreOriginal">
+
+        <div class="form-row">
+          <label>Marca</label>
+          <input type="text" id="editarNombre" disabled style="background:#eaeaea;font-weight:700;">
+        </div>
+
+        <div class="form-row">
+          <label>Responsable Asignado</label>
+          <select id="editarResp">
+            <option value="R">Rebeca</option>
+            <option value="F">Franklin</option>
+            <option value="Roger">Roger</option>
+          </select>
+        </div>
+
+        <div class="sep"></div>
+
+        <!-- DIAS SEMANALES -->
+        <div class="form-row">
+          <label>Días de entrega semanal</label>
+          <div class="dias-semana-grid" id="editarDiasSemGrid">
+            <button type="button" class="dia-btn" data-dia="Monday" onclick="toggleDiaSemana(this)">Lun</button>
+            <button type="button" class="dia-btn" data-dia="Tuesday" onclick="toggleDiaSemana(this)">Mar</button>
+            <button type="button" class="dia-btn" data-dia="Wednesday" onclick="toggleDiaSemana(this)">Mie</button>
+            <button type="button" class="dia-btn" data-dia="Thursday" onclick="toggleDiaSemana(this)">Jue</button>
+            <button type="button" class="dia-btn" data-dia="Friday" onclick="toggleDiaSemana(this)">Vie</button>
+          </div>
+        </div>
+
+        <div class="sep"></div>
+
+        <!-- DIAS MENSUALES -->
+        <div class="form-row">
+          <label>Días de entrega mensual (Día del mes)</label>
+          <div class="dias-mes-grid" id="editarDiasMesGrid"></div>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-neutral" onclick="cerrarModalEditar()">Cancelar</button>
+        <button class="btn btn-blue" onclick="guardarEdicionMarca()">Guardar Cambios</button>
+      </div>
+    </div>
   </div>
+
+  <!-- TOAST -->
+  <div id="toast"></div>
 
   <script>
     let allBrands = [];
+    const DIAS_TRAD = {
+      "Monday": "Lun",
+      "Tuesday": "Mar",
+      "Wednesday": "Mie",
+      "Thursday": "Jue",
+      "Friday": "Vie"
+    };
 
+    // ─── CALENDARIO DIAS MES ────────────────────────────
+    function buildDiasMes() {
+      const grid = document.getElementById("diasMesGrid");
+      const editGrid = document.getElementById("editarDiasMesGrid");
+      grid.innerHTML = "";
+      if (editGrid) editGrid.innerHTML = "";
+      for (let i = 1; i <= 31; i++) {
+        const d = String(i).padStart(2, "0");
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "dia-mes-btn";
+        btn.dataset.dia = d;
+        btn.textContent = i;
+        btn.onclick = function() { this.classList.toggle("selected"); };
+        grid.appendChild(btn);
+
+        if (editGrid) {
+          const btnEdit = document.createElement("button");
+          btnEdit.type = "button";
+          btnEdit.className = "dia-mes-btn";
+          btnEdit.dataset.dia = d;
+          btnEdit.textContent = i;
+          btnEdit.onclick = function() { this.classList.toggle("selected"); };
+          editGrid.appendChild(btnEdit);
+        }
+      }
+    }
+    buildDiasMes();
+
+    function toggleDiaSemana(el) {
+      el.classList.toggle("selected");
+    }
+
+    // ─── CARGAR DATOS ───────────────────────────────────
     async function cargarMarcas() {
       try {
         const res = await fetch("/api/marcas");
         allBrands = await res.json();
         renderTable(allBrands);
-      } catch(e) {
-        console.error("Error cargando marcas", e);
-      }
+      } catch(e) { console.error(e); }
     }
 
     async function cargarKPIs() {
       try {
         const res = await fetch("/api/kpis");
         const data = await res.json();
+        renderEquipo(data.rendimiento);
 
-        // Render KPI por Equipo
-        const eqContainer = document.getElementById("equipoContainer");
-        eqContainer.innerHTML = "";
-        
-        let totalEnt = 0;
-        let totalDeudas = 0;
-
-        Object.keys(data.rendimiento).forEach(key => {
-          const u = data.rendimiento[key];
+        let totalEnt = 0, totalDeudas = 0;
+        Object.values(data.rendimiento).forEach(u => {
           totalEnt += u.entregados;
           totalDeudas += u.deudas;
-
-          const div = document.createElement("div");
-          div.className = "p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-2";
-          const colorBar = key === 'R' ? 'bg-purple-600' : (key === 'F' ? 'bg-blue-600' : 'bg-slate-600');
-          const colorBadge = u.deudas === 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700';
-
-          div.innerHTML = `
-            <div class="flex items-center justify-between">
-              <span class="font-bold text-slate-900 text-sm">${u.nombre}</span>
-              <span class="px-2.5 py-0.5 ${colorBadge} font-extrabold text-[10px] rounded-full">
-                ${u.deudas === 0 ? '100% OK' : u.deudas + ' Pendientes'}
-              </span>
-            </div>
-            <div class="text-xs text-slate-400">${u.entregados} entregas registradas</div>
-            <div class="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
-              <div class="${colorBar} h-full rounded-full" style="width: ${u.entregados > 0 ? '100' : '0'}%"></div>
-            </div>
-          `;
-          eqContainer.appendChild(div);
         });
-
-        // Top Card Cumplimiento
         const total = totalEnt + totalDeudas;
         const pct = total > 0 ? Math.round((totalEnt / total) * 100) : 100;
-        document.getElementById("kpiCumplimientoRatio").innerText = `${totalEnt} / ${total}`;
-        document.getElementById("kpiCumplimientoPct").innerText = `${pct}%`;
-        document.getElementById("kpiProgressCap").style.width = `${pct}%`;
 
-      } catch(e) {
-        console.error("Error cargando KPIs", e);
-      }
+        document.getElementById("kpiRatio").innerText = `${totalEnt} / ${total}`;
+        document.getElementById("kpiPct").innerText = `${pct}% de entregas al dia`;
+        document.getElementById("historialCount").innerText = data.historial_semanas || 0;
+      } catch(e) { console.error(e); }
     }
 
+    function renderEquipo(rendimiento) {
+      const c = document.getElementById("equipoContainer");
+      c.innerHTML = "";
+      Object.keys(rendimiento).forEach(key => {
+        const u = rendimiento[key];
+        const penSemTxt = (u.deudas_semanal && u.deudas_semanal.length) ? u.deudas_semanal.join(", ") : "0";
+        const penMenTxt = (u.deudas_mensual && u.deudas_mensual.length) ? u.deudas_mensual.join(", ") : "0";
+
+        let estadoTexto = "";
+        if (u.deudas === 0) {
+          estadoTexto = '<span style="color:#166534;font-weight:600;">Sin pendientes</span>';
+        } else {
+          let partes = [];
+          if (u.deudas_semanal && u.deudas_semanal.length) partes.push(`Sem: ${penSemTxt}`);
+          if (u.deudas_mensual && u.deudas_mensual.length) partes.push(`Men: ${penMenTxt}`);
+          estadoTexto = `<span style="color:#dc2626;font-weight:600;">Pendiente (${partes.join(" | ")})</span>`;
+        }
+
+        const div = document.createElement("div");
+        div.className = "equipo-cell";
+        div.innerHTML = `
+          <div class="equipo-nombre">${u.nombre}</div>
+          <div class="equipo-sub">
+            <div>Entregados: <b>${u.entregados}</b> (Sem: ${(u.entregados_semanal || []).length} | Men: ${(u.entregados_mensual || []).length})</div>
+            <div style="margin-top:2px;">${estadoTexto}</div>
+          </div>`;
+        c.appendChild(div);
+      });
+    }
+
+    // ─── TABLA ──────────────────────────────────────────
     function renderTable(brands) {
       const tbody = document.getElementById("brandsTableBody");
       tbody.innerHTML = "";
-
-      let activeCount = 0;
-      let inactiveCount = 0;
+      let activas = 0, pausadas = 0;
 
       brands.forEach(b => {
-        if (b.activa) activeCount++; else inactiveCount++;
+        if (b.activa) activas++; else pausadas++;
+
+        let diasSem = "—";
+        if (Array.isArray(b.dias_semanales) && b.dias_semanales.length) {
+          diasSem = b.dias_semanales.map(d => DIAS_TRAD[d] || d).join(", ");
+        } else if (b.dia && !b.dia.toLowerCase().includes("mes")) {
+          diasSem = b.dia;
+        }
+
+        const diasMes = Array.isArray(b.dias_mensuales) && b.dias_mensuales.length
+          ? b.dias_mensuales.map(Number).sort((a,b)=>a-b).join(", ")
+          : "—";
 
         const tr = document.createElement("tr");
-        tr.className = "hover:bg-slate-50/80 transition-colors";
         tr.innerHTML = `
-          <td class="py-3.5 px-2 font-bold text-slate-900">${b.nombre}</td>
-          <td class="py-3.5 px-2">
-            <select onchange="reasignarMarca('${b.nombre}', this.value)" class="px-2.5 py-1 rounded-full text-[10px] font-bold border border-slate-200 bg-white shadow-sm focus:outline-none cursor-pointer">
+          <td style="font-weight:600;">${b.nombre}</td>
+          <td>
+            <select onchange="reasignarMarca('${b.nombre}', this.value)" style="width:auto;">
               <option value="R" ${b.resp === 'R' ? 'selected' : ''}>Rebeca</option>
               <option value="F" ${b.resp === 'F' ? 'selected' : ''}>Franklin</option>
               <option value="Roger" ${b.resp === 'Roger' ? 'selected' : ''}>Roger</option>
             </select>
           </td>
-          <td class="py-3.5 px-2 text-slate-400">${b.freq}</td>
-          <td class="py-3.5 px-2 font-semibold text-slate-700">${b.dia}</td>
-          <td class="py-3.5 px-2 text-center">
-            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${b.activa ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-400'}">
+          <td>${diasSem}</td>
+          <td>${diasMes}</td>
+          <td>
+            <span class="${b.activa ? 'badge-activa' : 'badge-pausada'}">
               ${b.activa ? 'Activa' : 'Pausada'}
             </span>
           </td>
-          <td class="py-3.5 px-2 text-right flex items-center justify-end space-x-3">
-            <label class="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" class="sr-only switch-checkbox" ${b.activa ? 'checked' : ''} onchange="toggleBrand('${b.nombre}')">
-              <div class="w-10 h-5 bg-slate-200 rounded-full switch-label transition-colors p-0.5 border border-slate-300/50">
-                <div class="w-4 h-4 bg-white rounded-full switch-dot transition-transform shadow-sm"></div>
-              </div>
-            </label>
-            <button onclick="eliminarMarca('${b.nombre}')" title="Quitar marca" class="text-slate-300 hover:text-red-500 font-bold transition text-sm">
-              🗑️
+          <td style="text-align:right;white-space:nowrap;">
+            <button class="btn btn-neutral" style="font-size:11px;padding:4px 8px;" onclick="abrirModalEditar('${b.nombre}')">
+              Editar
             </button>
-          </td>
-        `;
+            <button class="btn btn-neutral" style="font-size:11px;padding:4px 8px;margin-left:4px;" onclick="toggleBrand('${b.nombre}')">
+              ${b.activa ? 'Pausar' : 'Activar'}
+            </button>
+            <button class="btn btn-red" style="font-size:11px;padding:4px 8px;margin-left:4px;" onclick="eliminarMarca('${b.nombre}')">
+              Quitar
+            </button>
+          </td>`;
         tbody.appendChild(tr);
       });
 
-      document.getElementById("activeCount").innerText = activeCount;
-      document.getElementById("inactiveCountText").innerText = `+ ${inactiveCount} Marcas pausadas`;
+      document.getElementById("activeCount").innerText = activas;
+      document.getElementById("inactiveCount").innerText = pausadas;
     }
 
+    // ─── FILTROS ─────────────────────────────────────────
+    function filterBrands() {
+      const search = document.getElementById("searchInput").value.toLowerCase();
+      const user = document.getElementById("userFilter").value;
+      const filtered = allBrands.filter(b =>
+        b.nombre.toLowerCase().includes(search) && (user === "ALL" || b.resp === user)
+      );
+      renderTable(filtered);
+    }
+
+    // ─── ACCIONES ────────────────────────────────────────
     async function toggleBrand(nombre) {
-      try {
-        const res = await fetch("/api/marcas/toggle", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ nombre: nombre })
-        });
-        const data = await res.json();
-        if (data.success) {
-          showToast(`Marca ${nombre} ${data.activa ? 'activada' : 'pausada'}`);
-          cargarMarcas();
-          cargarKPIs();
-        }
-      } catch(e) {
-        console.error("Error al toggle marca", e);
-      }
+      const res = await fetch("/api/marcas/toggle", {
+        method: "POST", headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({ nombre })
+      });
+      const d = await res.json();
+      if (d.success) { showToast(`${nombre}: ${d.activa ? 'activada' : 'pausada'}`); cargarMarcas(); cargarKPIs(); }
     }
 
-    async function reasignarMarca(nombre, nuevoResp) {
-      try {
-        const res = await fetch("/api/marcas/reasignar", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ nombre: nombre, resp: nuevoResp })
-        });
-        const data = await res.json();
-        if (data.success) {
-          showToast(`Marca ${nombre} reasignada a: ${data.respNombre}`);
-          cargarMarcas();
-          cargarKPIs();
-        }
-      } catch(e) {
-        console.error("Error al reasignar marca", e);
-      }
+    async function reasignarMarca(nombre, resp) {
+      const res = await fetch("/api/marcas/reasignar", {
+        method: "POST", headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({ nombre, resp })
+      });
+      const d = await res.json();
+      if (d.success) { showToast(`${nombre} reasignada a ${d.respNombre}`); cargarMarcas(); }
     }
 
     async function eliminarMarca(nombre) {
-      if (!confirm(`¿Estás seguro de quitar la marca "${nombre}" del sistema?`)) return;
-      try {
-        const res = await fetch("/api/marcas/eliminar", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ nombre: nombre })
-        });
-        const data = await res.json();
-        if (data.success) {
-          showToast(`Marca "${nombre}" eliminada`);
-          cargarMarcas();
-          cargarKPIs();
-        }
-      } catch(e) {
-        console.error("Error al eliminar marca", e);
-      }
+      if (!confirm(`Confirmas quitar la marca "${nombre}"?`)) return;
+      const res = await fetch("/api/marcas/eliminar", {
+        method: "POST", headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({ nombre })
+      });
+      const d = await res.json();
+      if (d.success) { showToast(`"${nombre}" eliminada`); cargarMarcas(); cargarKPIs(); }
     }
 
-    function abrirModalCrear() {
-      document.getElementById("modalCrear").classList.remove("hidden");
+    async function triggerTestNotification() {
+      const res = await fetch("/api/test", { method: "POST" });
+      const d = await res.json();
+      showToast(d.success ? "Prueba enviada al grupo de Telegram" : "Error al enviar prueba");
     }
 
-    function cerrarModalCrear() {
-      document.getElementById("modalCrear").classList.add("hidden");
+    // ─── MODAL CREAR ─────────────────────────────────────
+    function abrirModal() {
+      document.getElementById("modalCrear").classList.add("open");
+    }
+    function cerrarModal() {
+      document.getElementById("modalCrear").classList.remove("open");
+      document.getElementById("nuevoNombre").value = "";
+      document.querySelectorAll("#modalCrear .dia-btn.selected, #modalCrear .dia-mes-btn.selected").forEach(el => el.classList.remove("selected"));
     }
 
     async function guardarNuevaMarca() {
       const nombre = document.getElementById("nuevoNombre").value.trim();
       const resp = document.getElementById("nuevoResp").value;
-      const freq = document.getElementById("nuevaFreq").value;
-      const dia = document.getElementById("nuevoDia").value.trim() || "Lunes";
 
-      if (!nombre) {
-        alert("Ingresa el nombre de la marca");
-        return;
-      }
+      if (!nombre) { alert("Ingresa el nombre de la marca"); return; }
 
-      try {
-        const res = await fetch("/api/marcas/crear", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ nombre, resp, freq, dia })
-        });
-        const data = await res.json();
-        if (data.success) {
-          showToast(`Nueva marca "${nombre}" agregada con éxito`);
-          cerrarModalCrear();
-          document.getElementById("nuevoNombre").value = "";
-          cargarMarcas();
-          cargarKPIs();
-        } else {
-          alert(data.error || "Error al crear la marca");
-        }
-      } catch(e) {
-        console.error("Error al crear marca", e);
+      const diasSemanales = [...document.querySelectorAll("#modalCrear .dia-btn.selected")].map(el => el.dataset.dia);
+      const diasMensuales = [...document.querySelectorAll("#modalCrear .dia-mes-btn.selected")].map(el => el.dataset.dia);
+
+      const res = await fetch("/api/marcas/crear", {
+        method: "POST", headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({ nombre, resp, dias_semanales: diasSemanales, dias_mensuales: diasMensuales })
+      });
+      const d = await res.json();
+      if (d.success) {
+        showToast(`Marca "${nombre}" creada`);
+        cerrarModal();
+        cargarMarcas();
+        cargarKPIs();
+      } else {
+        alert(d.error || "Error al crear la marca");
       }
     }
 
-    function filterBrands() {
-      const search = document.getElementById("searchInput").value.toLowerCase();
-      const user = document.getElementById("userFilter").value;
+    // ─── MODAL EDITAR ─────────────────────────────────────
+    function abrirModalEditar(nombre) {
+      const marca = allBrands.find(b => b.nombre === nombre);
+      if (!marca) return;
 
-      const filtered = allBrands.filter(b => {
-        const matchesSearch = b.nombre.toLowerCase().includes(search);
-        const matchesUser = user === "ALL" || b.resp === user;
-        return matchesSearch && matchesUser;
+      document.getElementById("editarNombreOriginal").value = marca.nombre;
+      document.getElementById("editarNombre").value = marca.nombre;
+      document.getElementById("editarResp").value = marca.resp || "F";
+
+      // Limpiar selecciones previas
+      document.querySelectorAll("#modalEditar .dia-btn, #modalEditar .dia-mes-btn").forEach(el => el.classList.remove("selected"));
+
+      // Marcar días semanales
+      const diasSem = Array.isArray(marca.dias_semanales) ? marca.dias_semanales : [];
+      diasSem.forEach(dia => {
+        const btn = document.querySelector(`#editarDiasSemGrid .dia-btn[data-dia="${dia}"]`);
+        if (btn) btn.classList.add("selected");
       });
 
-      renderTable(filtered);
+      // Marcar días mensuales
+      const diasMes = Array.isArray(marca.dias_mensuales) ? marca.dias_mensuales : [];
+      diasMes.forEach(dia => {
+        const dStr = String(parseInt(dia)).padStart(2, "0");
+        const btn = document.querySelector(`#editarDiasMesGrid .dia-mes-btn[data-dia="${dStr}"]`);
+        if (btn) btn.classList.add("selected");
+      });
+
+      document.getElementById("modalEditar").classList.add("open");
     }
 
-    async function triggerTestNotification() {
-      try {
-        const res = await fetch("/api/test", { method: "POST" });
-        const data = await res.json();
-        if (data.success) {
-          showToast("⚡ Prueba de jornada enviada a Telegram");
-        }
-      } catch(e) {
-        showToast("Error al enviar prueba");
+    function cerrarModalEditar() {
+      document.getElementById("modalEditar").classList.remove("open");
+    }
+
+    async function guardarEdicionMarca() {
+      const nombre = document.getElementById("editarNombreOriginal").value;
+      const resp = document.getElementById("editarResp").value;
+
+      const diasSemanales = [...document.querySelectorAll("#modalEditar .dia-btn.selected")].map(el => el.dataset.dia);
+      const diasMensuales = [...document.querySelectorAll("#modalEditar .dia-mes-btn.selected")].map(el => el.dataset.dia);
+
+      const res = await fetch("/api/marcas/editar", {
+        method: "POST", headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({ nombre, resp, dias_semanales: diasSemanales, dias_mensuales: diasMensuales })
+      });
+      const d = await res.json();
+      if (d.success) {
+        showToast(`Ficha de "${nombre}" actualizada`);
+        cerrarModalEditar();
+        cargarMarcas();
+        cargarKPIs();
+      } else {
+        alert(d.error || "Error al actualizar la marca");
       }
     }
 
+    // ─── NAVEGACION DE PESTAÑAS ─────────────────────────
+    function cambiarVista(vista) {
+      const tabMarcas = document.getElementById("tabBtnMarcas");
+      const tabHistorial = document.getElementById("tabBtnHistorial");
+      const vistaMarcas = document.getElementById("vistaMarcas");
+      const vistaHistorial = document.getElementById("vistaHistorial");
+      const btnNuevaMarca = document.getElementById("btnNuevaMarcaHeader");
+
+      if (vista === "historial") {
+        tabMarcas.classList.remove("active");
+        tabHistorial.classList.add("active");
+        vistaMarcas.style.display = "none";
+        vistaHistorial.style.display = "block";
+        if (btnNuevaMarca) btnNuevaMarca.style.display = "none";
+        cargarHistorial();
+      } else {
+        tabHistorial.classList.remove("active");
+        tabMarcas.classList.add("active");
+        vistaHistorial.style.display = "none";
+        vistaMarcas.style.display = "block";
+        if (btnNuevaMarca) btnNuevaMarca.style.display = "inline-block";
+        cargarMarcas();
+        cargarKPIs();
+      }
+    }
+
+    // ─── CARGAR HISTORIAL ────────────────────────────────
+    async function cargarHistorial() {
+      try {
+        const res = await fetch("/api/historial");
+        const data = await res.json();
+        renderHistorial(data);
+      } catch(e) {
+        console.error("Error al cargar historial:", e);
+      }
+    }
+
+    function renderHistorial(data) {
+      const tbody = document.getElementById("historialTableBody");
+      tbody.innerHTML = "";
+
+      const semanas = data.semanas || [];
+      if (semanas.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#888;padding:24px;">No hay semanas cerradas registradas en el mes actual aún.</td></tr>`;
+      } else {
+        semanas.forEach(s => {
+          let badgeColor = "#166534";
+          if (s.cumplimiento_pct < 80) badgeColor = "#b45309";
+          if (s.cumplimiento_pct < 50) badgeColor = "#dc2626";
+
+          let desgloseResp = [];
+          Object.keys(s.responsables || {}).forEach(k => {
+            const u = s.responsables[k];
+            const entTxt = u.entregados && u.entregados.length ? u.entregados.join(", ") : "0";
+            const deuTxt = u.deudas && u.deudas.length ? u.deudas.join(", ") : "0";
+
+            desgloseResp.push(`
+              <div style="font-size:11px;margin-bottom:3px;">
+                <b>${u.nombre}:</b> 
+                <span style="color:#166534;">OK: ${u.entregados.length} (${entTxt})</span>
+                ${u.deudas.length ? ` | <span style="color:#dc2626;">Deuda: ${u.deudas.length} (${deuTxt})</span>` : ''}
+              </div>
+            `);
+          });
+
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td style="font-weight:700;">Semana ${s.num}</td>
+            <td style="font-weight:600;">${s.rango}</td>
+            <td>
+              <span style="font-weight:700;color:${badgeColor};font-size:13px;">${s.cumplimiento_pct}%</span>
+            </td>
+            <td style="font-weight:600;color:#166534;">${s.total_entregados}</td>
+            <td style="font-weight:600;color:${s.total_deudas > 0 ? '#dc2626' : '#666'};">${s.total_deudas}</td>
+            <td>${desgloseResp.join("")}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+
+      // Archivo Histórico de meses pasados
+      const mesesObj = data.archivo_historico || {};
+      const mesesKeys = Object.keys(mesesObj);
+      const seccionMeses = document.getElementById("seccionMesesArchivados");
+      const contMeses = document.getElementById("mesesArchivadosContainer");
+
+      if (mesesKeys.length > 0) {
+        seccionMeses.style.display = "block";
+        contMeses.innerHTML = "";
+
+        mesesKeys.forEach(mesTag => {
+          const semanasMes = mesesObj[mesTag];
+          let htmlMes = `
+            <div style="margin-bottom:18px;">
+              <h3 style="font-size:12px;font-weight:700;text-transform:uppercase;color:#444;margin-bottom:8px;">Mes: ${mesTag}</h3>
+              <table style="width:100%;margin-bottom:12px;">
+                <thead>
+                  <tr>
+                    <th>Semana</th>
+                    <th>Período</th>
+                    <th>Cumplimiento</th>
+                    <th>Entregas</th>
+                    <th>Deudas</th>
+                  </tr>
+                </thead>
+                <tbody>`;
+
+          semanasMes.forEach(sm => {
+            htmlMes += `
+              <tr>
+                <td>Semana ${sm.num}</td>
+                <td>${sm.rango}</td>
+                <td style="font-weight:700;">${sm.cumplimiento_pct}%</td>
+                <td style="color:#166534;">${sm.total_entregados}</td>
+                <td style="color:${sm.total_deudas > 0 ? '#dc2626' : '#666'};">${sm.total_deudas}</td>
+              </tr>`;
+          });
+
+          htmlMes += `</tbody></table></div>`;
+          contMeses.innerHTML += htmlMes;
+        });
+      } else {
+        seccionMeses.style.display = "none";
+      }
+    }
+
+    // ─── TOAST ───────────────────────────────────────────
     function showToast(msg) {
-      const toast = document.getElementById("toast");
-      document.getElementById("toastMsg").innerText = msg;
-      toast.classList.remove("opacity-0");
-      setTimeout(() => toast.classList.add("opacity-0"), 3000);
+      const t = document.getElementById("toast");
+      t.innerText = msg;
+      t.style.opacity = "1";
+      setTimeout(() => { t.style.opacity = "0"; }, 3000);
     }
 
     cargarMarcas();

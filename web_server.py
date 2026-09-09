@@ -13,6 +13,8 @@ def registrar_test_callback(fn):
     global test_diario_callback
     test_diario_callback = fn
 
+DIAS_ES = {"Monday": "Lunes", "Tuesday": "Martes", "Wednesday": "Miércoles", "Thursday": "Jueves", "Friday": "Viernes"}
+
 def obtener_todas_las_marcas():
     """Compila lista completa de marcas con sus frecuencias y días asignados."""
     datos = cargar_datos()
@@ -22,29 +24,36 @@ def obtener_todas_las_marcas():
     resultado = []
     marcas_vistas = set()
 
-    # 1. Marcas semanales estáticas
-    DIAS_ES = {"Monday": "Lunes", "Tuesday": "Martes", "Wednesday": "Miércoles", "Thursday": "Jueves", "Friday": "Viernes"}
+    # 1. Marcas semanales: agrupa todos los días de la misma marca
+    marca_sem_info = {}
     for dia_en, asignaciones in CALENDARIO_SEMANAL.items():
-        dia_es = DIAS_ES.get(dia_en, dia_en)
         for resp_orig, lista_m in asignaciones.items():
             for m in lista_m:
                 if m in marcas_eliminadas:
                     continue
-                resp_actual = asignaciones_custom.get(m, resp_orig)
-                freq = "Semanal"
-                dias_m = [d for d, m_list in DIAS_MENSUALES.items() if m in m_list]
-                if dias_m:
-                    freq += f" + Mensual (Día {', '.join(dias_m)})"
-                
-                resultado.append({
-                    "nombre": m,
-                    "resp": resp_actual,
-                    "respNombre": USUARIOS.get(resp_actual, {}).get("nombre", resp_actual),
-                    "freq": freq,
-                    "dia": dia_es,
-                    "activa": m not in marcas_desactivadas
-                })
-                marcas_vistas.add(m)
+                if m not in marca_sem_info:
+                    marca_sem_info[m] = {"resp": resp_orig, "dias": []}
+                if dia_en not in marca_sem_info[m]["dias"]:
+                    marca_sem_info[m]["dias"].append(dia_en)
+
+    for m, info in marca_sem_info.items():
+        resp_actual = asignaciones_custom.get(m, info["resp"])
+        dias_m = [d for d, m_list in DIAS_MENSUALES.items() if m in m_list]
+        dias_es = [DIAS_ES.get(d, d) for d in info["dias"]]
+        freq = "Semanal"
+        if dias_m:
+            freq += f" + Mensual (Día {', '.join(dias_m)})"
+        resultado.append({
+            "nombre": m,
+            "resp": resp_actual,
+            "respNombre": USUARIOS.get(resp_actual, {}).get("nombre", resp_actual),
+            "freq": freq,
+            "dia": ", ".join(dias_es),
+            "dias_semanales": info["dias"],
+            "dias_mensuales": dias_m,
+            "activa": m not in marcas_desactivadas
+        })
+        marcas_vistas.add(m)
 
     # 2. Marcas únicamente mensuales
     for dia_m, lista_m in DIAS_MENSUALES.items():
@@ -57,6 +66,8 @@ def obtener_todas_las_marcas():
                     "respNombre": USUARIOS.get(resp_actual, {}).get("nombre", resp_actual),
                     "freq": f"Mensual (Día {dia_m})",
                     "dia": f"Día {dia_m} del mes",
+                    "dias_semanales": [],
+                    "dias_mensuales": [dia_m],
                     "activa": m not in marcas_desactivadas
                 })
                 marcas_vistas.add(m)
@@ -66,12 +77,16 @@ def obtener_todas_las_marcas():
         m_nombre = m_custom.get("nombre")
         if m_nombre and m_nombre not in marcas_vistas and m_nombre not in marcas_eliminadas:
             resp_actual = asignaciones_custom.get(m_nombre, m_custom.get("resp", "F"))
+            dias_sem = m_custom.get("dias_semanales", [])
+            dias_mes = m_custom.get("dias_mensuales", [])
             resultado.append({
                 "nombre": m_nombre,
                 "resp": resp_actual,
                 "respNombre": USUARIOS.get(resp_actual, {}).get("nombre", resp_actual),
                 "freq": m_custom.get("freq", "Personalizado"),
                 "dia": m_custom.get("dia", "Asignado"),
+                "dias_semanales": dias_sem,
+                "dias_mensuales": dias_mes,
                 "activa": m_nombre not in marcas_desactivadas
             })
             marcas_vistas.add(m_nombre)
@@ -134,31 +149,101 @@ def crear_marca():
     body = request.get_json() or {}
     nombre = body.get("nombre")
     resp = body.get("resp", "F")
-    freq = body.get("freq", "Semanal")
-    dia = body.get("dia", "Lunes")
+    dias_semanales = body.get("dias_semanales", [])   # ["Monday", "Tuesday", ...]
+    dias_mensuales = body.get("dias_mensuales", [])   # ["05", "18", ...]
 
     if not nombre:
         return jsonify({"error": "Nombre de marca requerido"}), 400
 
     datos = cargar_datos()
     marcas_custom = datos.get("marcas_personalizadas", [])
-    
+
     # Evitar duplicados
     for m in marcas_custom:
         if m.get("nombre") == nombre:
             return jsonify({"error": "La marca ya existe"}), 400
 
+    # Construir freq y dia legibles
+    partes_freq = []
+    if dias_semanales:
+        partes_freq.append("Semanal")
+    if dias_mensuales:
+        dias_num = [str(int(d)) for d in sorted(dias_mensuales)]
+        partes_freq.append(f"Mensual (Día {', '.join(dias_num)})")
+    freq = " + ".join(partes_freq) if partes_freq else "Personalizado"
+
+    dias_es = [DIAS_ES.get(d, d) for d in dias_semanales]
+    dia_str = ", ".join(dias_es) if dias_es else ("Días " + ", ".join(dias_mensuales) if dias_mensuales else "Asignado")
+
     marcas_custom.append({
         "nombre": nombre,
         "resp": resp,
         "freq": freq,
-        "dia": dia
+        "dia": dia_str,
+        "dias_semanales": dias_semanales,
+        "dias_mensuales": dias_mensuales
     })
     datos["marcas_personalizadas"] = marcas_custom
     datos.setdefault("asignaciones_personalizadas", {})[nombre] = resp
     guardar_datos(datos)
 
     return jsonify({"success": True, "nombre": nombre})
+
+@app.route("/api/marcas/editar", methods=["POST"])
+def editar_marca():
+    body = request.get_json() or {}
+    nombre = body.get("nombre")
+    resp = body.get("resp")
+    dias_semanales = body.get("dias_semanales", [])
+    dias_mensuales = body.get("dias_mensuales", [])
+
+    if not nombre:
+        return jsonify({"error": "Nombre de marca requerido"}), 400
+
+    datos = cargar_datos()
+    if resp and resp in USUARIOS:
+        datos.setdefault("asignaciones_personalizadas", {})[nombre] = resp
+
+    # Construir freq y dia legibles
+    partes_freq = []
+    if dias_semanales:
+        partes_freq.append("Semanal")
+    if dias_mensuales:
+        dias_num = [str(int(d)) for d in sorted(dias_mensuales)]
+        partes_freq.append(f"Mensual (Día {', '.join(dias_num)})")
+    freq = " + ".join(partes_freq) if partes_freq else "Personalizado"
+
+    dias_es = [DIAS_ES.get(d, d) for d in dias_semanales]
+    dia_str = ", ".join(dias_es) if dias_es else ("Días " + ", ".join(dias_mensuales) if dias_mensuales else "Asignado")
+
+    marcas_custom = datos.get("marcas_personalizadas", [])
+    encontrada = False
+    for m in marcas_custom:
+        if m.get("nombre") == nombre:
+            m["resp"] = resp or m.get("resp", "F")
+            m["dias_semanales"] = dias_semanales
+            m["dias_mensuales"] = dias_mensuales
+            m["freq"] = freq
+            m["dia"] = dia_str
+            encontrada = True
+            break
+
+    if not encontrada:
+        # Si era estática original, se registra en marcas_personalizadas para sobreescribir sus días
+        marcas_custom.append({
+            "nombre": nombre,
+            "resp": resp or obtener_responsable(nombre),
+            "freq": freq,
+            "dia": dia_str,
+            "dias_semanales": dias_semanales,
+            "dias_mensuales": dias_mensuales
+        })
+
+    datos["marcas_personalizadas"] = marcas_custom
+    guardar_datos(datos)
+    return jsonify({"success": True, "nombre": nombre})
+
+
 
 @app.route("/api/marcas/eliminar", methods=["POST"])
 def eliminar_marca():
@@ -183,15 +268,50 @@ def get_kpis():
     total_activas = len([m for m in marcas if m["activa"]])
     total_pausadas = len([m for m in marcas if not m["activa"]])
 
+    # Función auxiliar para clasificar item
+    def clasificar(item):
+        if isinstance(item, dict):
+            return item.get("marca", ""), item.get("tipo", "SEMANAL")
+        if isinstance(item, str):
+            if "|" in item:
+                partes = item.split("|", 1)
+                return partes[0], partes[1]
+            tipo = datos.get("tipos_semanales", {}).get(item, "SEMANAL")
+            return item, tipo
+        return str(item), "SEMANAL"
+
     # Rendimiento por responsable
     rendimiento = {}
     for r in ["R", "F", "Roger"]:
-        entregados = len(datos.get("entregados", {}).get(r, []))
-        deudas = len(datos.get("deudas", {}).get(r, []))
+        entregados_items = datos.get("entregados", {}).get(r, [])
+        deudas_items = datos.get("deudas", {}).get(r, [])
+
+        ent_sem = []
+        ent_men = []
+        for item in entregados_items:
+            m, t = clasificar(item)
+            if t == "MENSUAL":
+                ent_men.append(m)
+            else:
+                ent_sem.append(m)
+
+        pen_sem = []
+        pen_men = []
+        for item in deudas_items:
+            m, t = clasificar(item)
+            if t == "MENSUAL":
+                pen_men.append(m)
+            else:
+                pen_sem.append(m)
+
         rendimiento[r] = {
             "nombre": USUARIOS.get(r, {}).get("nombre", r),
-            "entregados": entregados,
-            "deudas": deudas
+            "entregados": len(entregados_items),
+            "entregados_semanal": ent_sem,
+            "entregados_mensual": ent_men,
+            "deudas": len(deudas_items),
+            "deudas_semanal": pen_sem,
+            "deudas_mensual": pen_men
         }
 
     return jsonify({
@@ -200,6 +320,62 @@ def get_kpis():
         "rendimiento": rendimiento,
         "historial_semanas": len(datos.get("historial_mensual", []))
     })
+
+@app.route("/api/historial")
+def get_historial():
+    datos = cargar_datos()
+    historial_mensual = datos.get("historial_mensual", [])
+    archivo_historico = datos.get("archivo_historico", {})
+
+    def procesar_semana(sem, index):
+        ent = sem.get("entregados", {})
+        deu = sem.get("deudas", {})
+
+        detalles_resp = {}
+        total_ent = 0
+        total_deu = 0
+
+        for r in ["R", "F", "Roger"]:
+            lista_ent = ent.get(r, [])
+            lista_deu = deu.get(r, [])
+
+            # Normalizar nombres de marcas si vienen como dict o string
+            norm_ent = [x.get("marca", str(x)) if isinstance(x, dict) else str(x) for x in lista_ent]
+            norm_deu = [x.get("marca", str(x)) if isinstance(x, dict) else str(x) for x in lista_deu]
+
+            total_ent += len(norm_ent)
+            total_deu += len(norm_deu)
+
+            detalles_resp[r] = {
+                "nombre": USUARIOS.get(r, {}).get("nombre", r),
+                "entregados": norm_ent,
+                "deudas": norm_deu
+            }
+
+        total = total_ent + total_deu
+        pct = round((total_ent / total) * 100) if total > 0 else 100
+
+        return {
+            "num": index,
+            "rango": sem.get("rango", f"Semana {index}"),
+            "total_entregados": total_ent,
+            "total_deudas": total_deu,
+            "cumplimiento_pct": pct,
+            "responsables": detalles_resp
+        }
+
+    semanas_actuales = [procesar_semana(s, i + 1) for i, s in enumerate(historial_mensual)]
+
+    meses_archivados = {}
+    for mes_tag, lista_sem in archivo_historico.items():
+        meses_archivados[mes_tag] = [procesar_semana(s, i + 1) for i, s in enumerate(lista_sem)]
+
+    return jsonify({
+        "mes_actual_id": datos.get("mes_id", ""),
+        "semanas": semanas_actuales,
+        "archivo_historico": meses_archivados
+    })
+
 
 @app.route("/api/test", methods=["POST"])
 def trigger_test():

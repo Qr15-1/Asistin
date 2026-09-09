@@ -83,11 +83,27 @@ def enviar_recordatorio_diario(forzar=False):
     datos["reportes_hoy"] = {}
     marcas_desactivadas = datos.get("marcas_desactivadas", [])
 
+    # Marcas semanales estáticas
     if dia_en in CALENDARIO_SEMANAL:
         for resp, marcas in CALENDARIO_SEMANAL[dia_en].items():
             for m in marcas:
-                if m not in marcas_desactivadas:
-                    datos["reportes_hoy"][m] = {"status": "POR ENTREGA", "user": resp, "tipo": "SEMANAL"}
+                if m not in marcas_desactivadas and m not in datos.get("marcas_eliminadas", []):
+                    resp_actual = obtener_responsable(m)
+                    datos["reportes_hoy"][m] = {"status": "POR ENTREGA", "user": resp_actual, "tipo": "SEMANAL"}
+
+    # Marcas dinámicas agregadas desde la web (semanales y mensuales)
+    for m_custom in datos.get("marcas_personalizadas", []):
+        m_nombre = m_custom.get("nombre")
+        if not m_nombre or m_nombre in marcas_desactivadas or m_nombre in datos.get("marcas_eliminadas", []):
+            continue
+        resp_actual = obtener_responsable(m_nombre)
+        dias_sem = m_custom.get("dias_semanales", [])
+        dias_mes = m_custom.get("dias_mensuales", [])
+
+        if dia_en in dias_sem:
+            datos["reportes_hoy"][m_nombre] = {"status": "POR ENTREGA", "user": resp_actual, "tipo": "SEMANAL"}
+        if dia_numero in dias_mes or str(int(dia_numero)) in [str(int(x)) for x in dias_mes if x.isdigit()]:
+            datos["reportes_hoy"][m_nombre] = {"status": "POR ENTREGA", "user": resp_actual, "tipo": "MENSUAL"}
 
     # Verificar si hoy es lunes: agregar entregas mensuales que cayeron en finde
     if dia_en == "Monday":
@@ -97,13 +113,22 @@ def enviar_recordatorio_diario(forzar=False):
             dia_finde = fecha_finde.strftime("%d")
             if dia_finde in DIAS_MENSUALES:
                 for m_mensual in DIAS_MENSUALES[dia_finde]:
-                    if m_mensual not in marcas_desactivadas:
+                    if m_mensual not in marcas_desactivadas and m_mensual not in datos.get("marcas_eliminadas", []):
                         resp = obtener_responsable(m_mensual)
                         datos["reportes_hoy"][m_mensual] = {"status": "POR ENTREGA", "user": resp, "tipo": "MENSUAL"}
+            # Marcas dinámicas mensuales en finde
+            for m_custom in datos.get("marcas_personalizadas", []):
+                m_nombre = m_custom.get("nombre")
+                if not m_nombre or m_nombre in marcas_desactivadas or m_nombre in datos.get("marcas_eliminadas", []):
+                    continue
+                dias_mes = m_custom.get("dias_mensuales", [])
+                if dia_finde in dias_mes or str(int(dia_finde)) in [str(int(x)) for x in dias_mes if x.isdigit()]:
+                    resp = obtener_responsable(m_nombre)
+                    datos["reportes_hoy"][m_nombre] = {"status": "POR ENTREGA", "user": resp, "tipo": "MENSUAL"}
 
     if dia_numero in DIAS_MENSUALES:
         for m_mensual in DIAS_MENSUALES[dia_numero]:
-            if m_mensual not in marcas_desactivadas:
+            if m_mensual not in marcas_desactivadas and m_mensual not in datos.get("marcas_eliminadas", []):
                 resp = obtener_responsable(m_mensual)
                 datos["reportes_hoy"][m_mensual] = {"status": "POR ENTREGA", "user": resp, "tipo": "MENSUAL"}
     
@@ -111,6 +136,7 @@ def enviar_recordatorio_diario(forzar=False):
         resp = info["user"]; tipo = info["tipo"]
         datos.setdefault("tipos_semanales", {})[m] = tipo
         deuda_item = {"marca": m, "tipo": tipo}
+        datos.setdefault("deudas", {}).setdefault(resp, [])
         if not any(obtener_item_info(x, datos) == (m, tipo) for x in datos["deudas"][resp]):
             datos["deudas"][resp].append(deuda_item)
         try:
