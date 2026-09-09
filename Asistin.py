@@ -10,6 +10,7 @@ from bot import bot
 from config import TOKEN, ID_GRUPO_OFICIAL, USUARIOS, ADMIN_IDS, CALENDARIO_SEMANAL, DIAS_MENSUALES
 from state_manager import cargar_datos, guardar_datos, gestionar_tiempos, obtener_responsable
 from utils import obtener_hora_actual, obtener_rango_semana, es_fin_de_semana, proximo_lunes
+from web_server import iniciar_servidor_web, registrar_test_callback
 
 # HELPER DE ESTRUCTURA
 def obtener_item_info(item, datos=None):
@@ -80,10 +81,13 @@ def enviar_recordatorio_diario(forzar=False):
 
     bot.send_message(ID_GRUPO_OFICIAL, f"--- INICIO DE JORNADA: {ahora.strftime('%d/%m')} ---")
     datos["reportes_hoy"] = {}
+    marcas_desactivadas = datos.get("marcas_desactivadas", [])
+
     if dia_en in CALENDARIO_SEMANAL:
         for resp, marcas in CALENDARIO_SEMANAL[dia_en].items():
             for m in marcas:
-                datos["reportes_hoy"][m] = {"status": "POR ENTREGA", "user": resp, "tipo": "SEMANAL"}
+                if m not in marcas_desactivadas:
+                    datos["reportes_hoy"][m] = {"status": "POR ENTREGA", "user": resp, "tipo": "SEMANAL"}
 
     # Verificar si hoy es lunes: agregar entregas mensuales que cayeron en finde
     if dia_en == "Monday":
@@ -93,13 +97,15 @@ def enviar_recordatorio_diario(forzar=False):
             dia_finde = fecha_finde.strftime("%d")
             if dia_finde in DIAS_MENSUALES:
                 for m_mensual in DIAS_MENSUALES[dia_finde]:
-                    resp = obtener_responsable(m_mensual)
-                    datos["reportes_hoy"][m_mensual] = {"status": "POR ENTREGA", "user": resp, "tipo": "MENSUAL"}
+                    if m_mensual not in marcas_desactivadas:
+                        resp = obtener_responsable(m_mensual)
+                        datos["reportes_hoy"][m_mensual] = {"status": "POR ENTREGA", "user": resp, "tipo": "MENSUAL"}
 
     if dia_numero in DIAS_MENSUALES:
         for m_mensual in DIAS_MENSUALES[dia_numero]:
-            resp = obtener_responsable(m_mensual)
-            datos["reportes_hoy"][m_mensual] = {"status": "POR ENTREGA", "user": resp, "tipo": "MENSUAL"}
+            if m_mensual not in marcas_desactivadas:
+                resp = obtener_responsable(m_mensual)
+                datos["reportes_hoy"][m_mensual] = {"status": "POR ENTREGA", "user": resp, "tipo": "MENSUAL"}
     
     for m, info in datos["reportes_hoy"].items():
         resp = info["user"]; tipo = info["tipo"]
@@ -298,5 +304,7 @@ def reloj():
         time.sleep(1)
 
 print("BOT REPORTIN ACTIVO")
+registrar_test_callback(enviar_recordatorio_diario)
+threading.Thread(target=iniciar_servidor_web, kwargs={"host": "0.0.0.0", "port": 5000}, daemon=True).start()
 threading.Thread(target=reloj, daemon=True).start()
 bot.infinity_polling(timeout=10, long_polling_timeout=5)

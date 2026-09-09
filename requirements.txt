@@ -1,2 +1,4 @@
 pyTelegramBotAPI==4.25.0
 schedule==1.2.2
+flask==3.0.3
+waitress==3.0.0

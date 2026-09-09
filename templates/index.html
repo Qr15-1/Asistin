@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Asistin - Soft UI Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #f1f5f9;
+      color: #0f172a;
+    }
+
+    .soft-card {
+      background: #ffffff;
+      border-radius: 24px;
+      box-shadow: 0 10px 30px -5px rgba(15, 23, 42, 0.04), 0 0 1px 1px rgba(15, 23, 42, 0.02);
+      border: 1px solid rgba(241, 245, 249, 0.9);
+      transition: all 0.2s ease-in-out;
+    }
+
+    .soft-card:hover {
+      box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.07);
+    }
+
+    .dark-card {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      border-radius: 24px;
+      box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.25);
+    }
+
+    .pill-active {
+      background-color: #0f172a;
+      color: #ffffff;
+      border-radius: 9999px;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
+    }
+
+    .pill-inactive {
+      color: #64748b;
+      border-radius: 9999px;
+      transition: all 0.15s ease;
+    }
+    .pill-inactive:hover {
+      color: #0f172a;
+      background-color: rgba(241, 245, 249, 0.8);
+    }
+
+    .switch-checkbox:checked + .switch-label {
+      background-color: #2563eb;
+    }
+    .switch-checkbox:checked + .switch-label .switch-dot {
+      transform: translateX(1.35rem);
+    }
+
+    .glass-effect {
+      background: rgba(255, 255, 255, 0.75);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+    }
+  </style>
+</head>
+<body class="p-4 md:p-8 min-h-screen">
+
+  <div class="max-w-7xl mx-auto space-y-6">
+
+    <!-- NAVBAR NIXTIO STYLE -->
+    <header class="soft-card glass-effect px-6 py-4 flex items-center justify-between">
+      <!-- LOGO -->
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-2xl bg-blue-600 flex items-center justify-center text-white font-extrabold text-xl shadow-lg shadow-blue-500/30">
+          A
+        </div>
+        <span class="text-xl font-bold tracking-tight text-slate-900">Asistin<span class="text-blue-600">.io</span></span>
+      </div>
+
+      <!-- NAVIGATION PILLS -->
+      <nav class="hidden md:flex items-center space-x-1 bg-slate-100/80 p-1.5 rounded-full border border-slate-200/60">
+        <a href="#" class="pill-active px-5 py-2 text-xs font-semibold tracking-wide">Dashboard</a>
+        <a href="#marcas" class="pill-inactive px-5 py-2 text-xs font-semibold tracking-wide">Gestión Marcas</a>
+        <a href="#kpis" class="pill-inactive px-5 py-2 text-xs font-semibold tracking-wide">Reportes & KPIs</a>
+      </nav>
+
+      <!-- QUICK CONTROLS BAR -->
+      <div class="flex items-center space-x-2 bg-slate-100/80 p-1.5 rounded-full border border-slate-200/60">
+        <button onclick="triggerTestNotification()" title="Disparar Test" class="w-9 h-9 rounded-full bg-white flex items-center justify-center text-slate-700 hover:text-blue-600 transition shadow-sm">
+          ⚡
+        </button>
+        <button title="Notificaciones" class="w-9 h-9 rounded-full bg-white flex items-center justify-center text-slate-700 relative shadow-sm">
+          🔔
+          <span class="absolute top-1 right-1 w-2 h-2 bg-blue-600 rounded-full animate-ping"></span>
+          <span class="absolute top-1 right-1 w-2 h-2 bg-blue-600 rounded-full"></span>
+        </button>
+        <div class="flex items-center space-x-2 pl-2 pr-3 border-l border-slate-200">
+          <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-bold flex items-center justify-center text-xs border border-blue-200">
+            RS
+          </div>
+          <span class="text-xs font-bold text-slate-800 hidden lg:inline">Roger S.</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- WELCOME & SUMMARY HEADER -->
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 px-2">
+      <div>
+        <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight text-slate-900">
+          Welcome back, <span class="text-blue-600">Roger</span> 👋
+        </h1>
+        <p class="text-sm font-medium text-slate-500 mt-1">
+          Monitoreo en vivo de entregas y estatus de marcas para el bot de Telegram
+        </p>
+      </div>
+
+      <div class="flex items-center space-x-3">
+        <button onclick="abrirModalCrear()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md shadow-blue-500/20 transition flex items-center space-x-1">
+          <span>+ Nueva Marca</span>
+        </button>
+        <span class="inline-flex items-center px-4 py-2 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 mr-2 animate-pulse"></span> EasyPanel Bot Active
+        </span>
+      </div>
+    </div>
+
+    <!-- GRID TOP CARDS: 3 SOFT CARDS + 1 DARK CONTRAST CARD -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-5">
+      
+      <!-- KPI CARD 1 -->
+      <div class="soft-card p-6 flex flex-col justify-between space-y-4">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-semibold uppercase text-slate-400 tracking-wider">Cumplimiento Semanal</span>
+          <span class="px-2.5 py-1 bg-blue-50 text-blue-600 text-xs font-extrabold rounded-full" id="kpiCumplimientoPct">100%</span>
+        </div>
+        <div>
+          <div class="text-4xl font-extrabold text-slate-900 tracking-tight" id="kpiCumplimientoRatio">-- / --</div>
+          <p class="text-xs font-medium text-slate-400 mt-1">Entregas de la semana al día</p>
+        </div>
+        <!-- Progress Capsule -->
+        <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden p-0.5 border border-slate-200/50">
+          <div class="bg-blue-600 h-full rounded-full transition-all duration-500" id="kpiProgressCap" style="width: 100%"></div>
+        </div>
+      </div>
+
+      <!-- KPI CARD 2: CIRCULAR TRACKER / RITMO -->
+      <div class="soft-card p-6 flex items-center justify-between">
+        <div>
+          <span class="text-xs font-semibold uppercase text-slate-400 tracking-wider">Ritmo de Entregas</span>
+          <div class="text-3xl font-extrabold text-slate-900 mt-2">Óptimo</div>
+          <p class="text-xs font-medium text-emerald-600 mt-1">⚡ Sin retrasos hoy</p>
+        </div>
+        <!-- CIRCULAR TIMETRACKER WIDGET -->
+        <div class="relative w-16 h-16 flex items-center justify-center">
+          <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+            <path class="text-slate-100" stroke-width="3.5" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+            <path class="text-blue-600" stroke-dasharray="100, 100" stroke-width="3.5" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+          </svg>
+          <span class="absolute text-xs font-bold text-slate-800">100%</span>
+        </div>
+      </div>
+
+      <!-- KPI CARD 3: MARCAS ACTIVAS -->
+      <div class="soft-card p-6 flex flex-col justify-between space-y-4">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-semibold uppercase text-slate-400 tracking-wider">Marcas Activas</span>
+          <span class="px-2.5 py-1 bg-emerald-50 text-emerald-600 text-xs font-extrabold rounded-full">Operativas</span>
+        </div>
+        <div>
+          <div class="text-4xl font-extrabold text-slate-900 tracking-tight" id="activeCount">--</div>
+          <p class="text-xs font-medium text-slate-400 mt-1">Con recordatorios en Telegram</p>
+        </div>
+        <div class="text-xs font-semibold text-slate-500" id="inactiveCountText">
+          + 0 Marcas pausadas
+        </div>
+      </div>
+
+      <!-- DARK CONTRAST CARD (PRIORITY / ACTION TASK) -->
+      <div class="dark-card p-6 text-white flex flex-col justify-between space-y-4 relative overflow-hidden">
+        <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-blue-500/10 rounded-full blur-xl pointer-events-none"></div>
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold uppercase tracking-wider text-blue-400">Acción Rápida</span>
+          <span class="w-2 h-2 rounded-full bg-blue-400 animate-ping"></span>
+        </div>
+        <div>
+          <h3 class="text-lg font-extrabold">Ejecutar Prueba</h3>
+          <p class="text-xs text-slate-300 mt-1">Envía una prueba de jornada completa al grupo oficial</p>
+        </div>
+        <button onclick="triggerTestNotification()" class="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl transition shadow-lg shadow-blue-600/30 tracking-wide">
+          DISPARAR TEST AHORA
+        </button>
+      </div>
+
+    </div>
+
+    <!-- MAIN CONTENT: GESTION DE MARCAS + GRAFICO ESTADISTICO -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6" id="marcas">
+
+      <!-- COLUMNA IZQUIERDA (2 COLS): TABLA SOFT UI GESTION DE MARCAS -->
+      <div class="lg:col-span-2 soft-card p-6 space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h2 class="text-xl font-extrabold text-slate-900">Gestión de Marcas</h2>
+            <p class="text-xs font-medium text-slate-400 mt-0.5">Asigna responsables, cambia frecuencias y activa/pausa marcas</p>
+          </div>
+
+          <!-- CONTROLES FILTRO -->
+          <div class="flex items-center space-x-2">
+            <input type="text" id="searchInput" oninput="filterBrands()" placeholder="Buscar marca..." class="px-3.5 py-2 text-xs bg-slate-100 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 w-40">
+            <select id="userFilter" onchange="filterBrands()" class="px-3.5 py-2 text-xs bg-slate-100 border border-slate-200 rounded-xl focus:outline-none font-semibold text-slate-700">
+              <option value="ALL">Todos los responsables</option>
+              <option value="R">Rebeca</option>
+              <option value="F">Franklin</option>
+              <option value="Roger">Roger</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- TABLA -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-left">
+            <thead>
+              <tr class="border-b border-slate-100 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                <th class="pb-3 px-2">Marca</th>
+                <th class="pb-3 px-2">Responsable Asignado</th>
+                <th class="pb-3 px-2">Frecuencia</th>
+                <th class="pb-3 px-2">Día</th>
+                <th class="pb-3 px-2 text-center">Estado</th>
+                <th class="pb-3 px-2 text-right">Acción / Switch</th>
+              </tr>
+            </thead>
+            <tbody id="brandsTableBody" class="divide-y divide-slate-100 text-xs font-medium text-slate-700">
+              <!-- JS Injected -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- COLUMNA DERECHA (1 COL): RENDIMIENTO POR RESPONSABLE & CHARTS -->
+      <div class="space-y-6" id="kpis">
+        
+        <!-- CARD 1: RENDIMIENTO INDIVIDUAL -->
+        <div class="soft-card p-6 space-y-5">
+          <h3 class="text-lg font-extrabold text-slate-900">Rendimiento por Equipo</h3>
+          <div id="equipoContainer" class="space-y-4">
+            <!-- JS Injected -->
+          </div>
+        </div>
+
+        <!-- CARD 2: GRAFICO BARRAS REDONDEADAS DE ENTREGAS -->
+        <div class="soft-card p-6 space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-extrabold text-slate-900">Entregas Diarias (Semana)</h3>
+            <span class="text-xs font-semibold text-blue-600">Lunes a Viernes</span>
+          </div>
+
+          <!-- SIMULATION ROUNDED BARS -->
+          <div class="flex items-end justify-between h-28 pt-4 px-2">
+            <div class="flex flex-col items-center space-y-1">
+              <div class="w-6 bg-blue-600 rounded-full" style="height: 70px;"></div>
+              <span class="text-[10px] font-bold text-slate-400">Lun</span>
+            </div>
+            <div class="flex flex-col items-center space-y-1">
+              <div class="w-6 bg-blue-600 rounded-full" style="height: 90px;"></div>
+              <span class="text-[10px] font-bold text-slate-400">Mar</span>
+            </div>
+            <div class="flex flex-col items-center space-y-1">
+              <div class="w-6 bg-blue-600 rounded-full" style="height: 50px;"></div>
+              <span class="text-[10px] font-bold text-slate-400">Mié</span>
+            </div>
+            <div class="flex flex-col items-center space-y-1">
+              <div class="w-6 bg-blue-600 rounded-full" style="height: 60px;"></div>
+              <span class="text-[10px] font-bold text-slate-400">Jue</span>
+            </div>
+            <div class="flex flex-col items-center space-y-1">
+              <div class="w-6 bg-blue-600 rounded-full" style="height: 40px;"></div>
+              <span class="text-[10px] font-bold text-slate-400">Vie</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- MODAL CREAR NUEVA MARCA -->
+  <div id="modalCrear" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+    <div class="soft-card max-w-md w-full p-6 space-y-5 bg-white">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 class="text-lg font-extrabold text-slate-900">+ Agregar Nueva Marca</h3>
+        <button onclick="cerrarModalCrear()" class="text-slate-400 hover:text-slate-600 font-bold">✕</button>
+      </div>
+
+      <div class="space-y-4 text-xs font-semibold">
+        <div>
+          <label class="block text-slate-600 mb-1">Nombre de la Marca</label>
+          <input type="text" id="nuevoNombre" placeholder="Ej: Mi Marca" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20">
+        </div>
+
+        <div>
+          <label class="block text-slate-600 mb-1">Responsable Asignado</label>
+          <select id="nuevoResp" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none font-semibold">
+            <option value="R">Rebeca (@Rebecaarh)</option>
+            <option value="F">Franklin (@Franklinjlopezr)</option>
+            <option value="Roger">Roger (@RogerAQA)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-slate-600 mb-1">Frecuencia</label>
+          <select id="nuevaFreq" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none font-semibold">
+            <option value="Semanal">Semanal</option>
+            <option value="Mensual">Mensual</option>
+            <option value="Semanal + Mensual">Semanal + Mensual</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-slate-600 mb-1">Día de Entrega</label>
+          <input type="text" id="nuevoDia" placeholder="Ej: Lunes o Día 15" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none">
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end space-x-2 pt-2 border-t border-slate-100">
+        <button onclick="cerrarModalCrear()" class="px-4 py-2 bg-slate-100 text-slate-600 hover:bg-slate-200 font-bold text-xs rounded-xl">Cancelar</button>
+        <button onclick="guardarNuevaMarca()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md shadow-blue-500/20">Guardar Marca</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST SOFT UI -->
+  <div id="toast" class="fixed bottom-6 right-6 bg-slate-900 text-white px-5 py-3.5 rounded-2xl shadow-2xl opacity-0 transition-opacity duration-300 pointer-events-none text-xs font-bold flex items-center space-x-3 border border-slate-700">
+    <span class="text-emerald-400">✓</span>
+    <span id="toastMsg">Acción completada</span>
+  </div>
+
+  <script>
+    let allBrands = [];
+
+    async function cargarMarcas() {
+      try {
+        const res = await fetch("/api/marcas");
+        allBrands = await res.json();
+        renderTable(allBrands);
+      } catch(e) {
+        console.error("Error cargando marcas", e);
+      }
+    }
+
+    async function cargarKPIs() {
+      try {
+        const res = await fetch("/api/kpis");
+        const data = await res.json();
+
+        // Render KPI por Equipo
+        const eqContainer = document.getElementById("equipoContainer");
+        eqContainer.innerHTML = "";
+        
+        let totalEnt = 0;
+        let totalDeudas = 0;
+
+        Object.keys(data.rendimiento).forEach(key => {
+          const u = data.rendimiento[key];
+          totalEnt += u.entregados;
+          totalDeudas += u.deudas;
+
+          const div = document.createElement("div");
+          div.className = "p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-2";
+          const colorBar = key === 'R' ? 'bg-purple-600' : (key === 'F' ? 'bg-blue-600' : 'bg-slate-600');
+          const colorBadge = u.deudas === 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700';
+
+          div.innerHTML = `
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-slate-900 text-sm">${u.nombre}</span>
+              <span class="px-2.5 py-0.5 ${colorBadge} font-extrabold text-[10px] rounded-full">
+                ${u.deudas === 0 ? '100% OK' : u.deudas + ' Pendientes'}
+              </span>
+            </div>
+            <div class="text-xs text-slate-400">${u.entregados} entregas registradas</div>
+            <div class="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
+              <div class="${colorBar} h-full rounded-full" style="width: ${u.entregados > 0 ? '100' : '0'}%"></div>
+            </div>
+          `;
+          eqContainer.appendChild(div);
+        });
+
+        // Top Card Cumplimiento
+        const total = totalEnt + totalDeudas;
+        const pct = total > 0 ? Math.round((totalEnt / total) * 100) : 100;
+        document.getElementById("kpiCumplimientoRatio").innerText = `${totalEnt} / ${total}`;
+        document.getElementById("kpiCumplimientoPct").innerText = `${pct}%`;
+        document.getElementById("kpiProgressCap").style.width = `${pct}%`;
+
+      } catch(e) {
+        console.error("Error cargando KPIs", e);
+      }
+    }
+
+    function renderTable(brands) {
+      const tbody = document.getElementById("brandsTableBody");
+      tbody.innerHTML = "";
+
+      let activeCount = 0;
+      let inactiveCount = 0;
+
+      brands.forEach(b => {
+        if (b.activa) activeCount++; else inactiveCount++;
+
+        const tr = document.createElement("tr");
+        tr.className = "hover:bg-slate-50/80 transition-colors";
+        tr.innerHTML = `
+          <td class="py-3.5 px-2 font-bold text-slate-900">${b.nombre}</td>
+          <td class="py-3.5 px-2">
+            <select onchange="reasignarMarca('${b.nombre}', this.value)" class="px-2.5 py-1 rounded-full text-[10px] font-bold border border-slate-200 bg-white shadow-sm focus:outline-none cursor-pointer">
+              <option value="R" ${b.resp === 'R' ? 'selected' : ''}>Rebeca</option>
+              <option value="F" ${b.resp === 'F' ? 'selected' : ''}>Franklin</option>
+              <option value="Roger" ${b.resp === 'Roger' ? 'selected' : ''}>Roger</option>
+            </select>
+          </td>
+          <td class="py-3.5 px-2 text-slate-400">${b.freq}</td>
+          <td class="py-3.5 px-2 font-semibold text-slate-700">${b.dia}</td>
+          <td class="py-3.5 px-2 text-center">
+            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${b.activa ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-400'}">
+              ${b.activa ? 'Activa' : 'Pausada'}
+            </span>
+          </td>
+          <td class="py-3.5 px-2 text-right flex items-center justify-end space-x-3">
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" class="sr-only switch-checkbox" ${b.activa ? 'checked' : ''} onchange="toggleBrand('${b.nombre}')">
+              <div class="w-10 h-5 bg-slate-200 rounded-full switch-label transition-colors p-0.5 border border-slate-300/50">
+                <div class="w-4 h-4 bg-white rounded-full switch-dot transition-transform shadow-sm"></div>
+              </div>
+            </label>
+            <button onclick="eliminarMarca('${b.nombre}')" title="Quitar marca" class="text-slate-300 hover:text-red-500 font-bold transition text-sm">
+              🗑️
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      document.getElementById("activeCount").innerText = activeCount;
+      document.getElementById("inactiveCountText").innerText = `+ ${inactiveCount} Marcas pausadas`;
+    }
+
+    async function toggleBrand(nombre) {
+      try {
+        const res = await fetch("/api/marcas/toggle", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ nombre: nombre })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast(`Marca ${nombre} ${data.activa ? 'activada' : 'pausada'}`);
+          cargarMarcas();
+          cargarKPIs();
+        }
+      } catch(e) {
+        console.error("Error al toggle marca", e);
+      }
+    }
+
+    async function reasignarMarca(nombre, nuevoResp) {
+      try {
+        const res = await fetch("/api/marcas/reasignar", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ nombre: nombre, resp: nuevoResp })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast(`Marca ${nombre} reasignada a: ${data.respNombre}`);
+          cargarMarcas();
+          cargarKPIs();
+        }
+      } catch(e) {
+        console.error("Error al reasignar marca", e);
+      }
+    }
+
+    async function eliminarMarca(nombre) {
+      if (!confirm(`¿Estás seguro de quitar la marca "${nombre}" del sistema?`)) return;
+      try {
+        const res = await fetch("/api/marcas/eliminar", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ nombre: nombre })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast(`Marca "${nombre}" eliminada`);
+          cargarMarcas();
+          cargarKPIs();
+        }
+      } catch(e) {
+        console.error("Error al eliminar marca", e);
+      }
+    }
+
+    function abrirModalCrear() {
+      document.getElementById("modalCrear").classList.remove("hidden");
+    }
+
+    function cerrarModalCrear() {
+      document.getElementById("modalCrear").classList.add("hidden");
+    }
+
+    async function guardarNuevaMarca() {
+      const nombre = document.getElementById("nuevoNombre").value.trim();
+      const resp = document.getElementById("nuevoResp").value;
+      const freq = document.getElementById("nuevaFreq").value;
+      const dia = document.getElementById("nuevoDia").value.trim() || "Lunes";
+
+      if (!nombre) {
+        alert("Ingresa el nombre de la marca");
+        return;
+      }
+
+      try {
+        const res = await fetch("/api/marcas/crear", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ nombre, resp, freq, dia })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast(`Nueva marca "${nombre}" agregada con éxito`);
+          cerrarModalCrear();
+          document.getElementById("nuevoNombre").value = "";
+          cargarMarcas();
+          cargarKPIs();
+        } else {
+          alert(data.error || "Error al crear la marca");
+        }
+      } catch(e) {
+        console.error("Error al crear marca", e);
+      }
+    }
+
+    function filterBrands() {
+      const search = document.getElementById("searchInput").value.toLowerCase();
+      const user = document.getElementById("userFilter").value;
+
+      const filtered = allBrands.filter(b => {
+        const matchesSearch = b.nombre.toLowerCase().includes(search);
+        const matchesUser = user === "ALL" || b.resp === user;
+        return matchesSearch && matchesUser;
+      });
+
+      renderTable(filtered);
+    }
+
+    async function triggerTestNotification() {
+      try {
+        const res = await fetch("/api/test", { method: "POST" });
+        const data = await res.json();
+        if (data.success) {
+          showToast("⚡ Prueba de jornada enviada a Telegram");
+        }
+      } catch(e) {
+        showToast("Error al enviar prueba");
+      }
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById("toast");
+      document.getElementById("toastMsg").innerText = msg;
+      toast.classList.remove("opacity-0");
+      setTimeout(() => toast.classList.add("opacity-0"), 3000);
+    }
+
+    cargarMarcas();
+    cargarKPIs();
+  </script>
+</body>
+</html>

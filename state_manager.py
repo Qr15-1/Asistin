@@ -19,7 +19,11 @@ def cargar_datos():
         "ultimo_envio": "", 
         "semana_id": datetime.now().strftime("%W"), 
         "mes_id": datetime.now().strftime("%m"),
-        "tipos_semanales": {}
+        "tipos_semanales": {},
+        "marcas_desactivadas": [],
+        "asignaciones_personalizadas": {},
+        "marcas_personalizadas": [],
+        "marcas_eliminadas": []
     }
     with DATA_LOCK:
         if not STATE_PATH.exists(): 
@@ -70,6 +74,9 @@ def gestionar_tiempos(datos):
     guardar_datos(datos)
 
 def obtener_responsable(marca):
+    datos = cargar_datos()
+    if marca in datos.get("asignaciones_personalizadas", {}):
+        return datos["asignaciones_personalizadas"][marca]
     for dia, asignaciones in CALENDARIO_SEMANAL.items():
         for resp, lista_marcas in asignaciones.items():
             if marca in lista_marcas: 
