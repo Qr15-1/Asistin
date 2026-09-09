@@ -359,21 +359,16 @@
       line-height: 1.1;
     }
     .dia-mes-btn.finde {
-      background: #f0eee9;
-      color: #b0aaa0;
-      border-color: #e4e0d8;
-      cursor: not-allowed;
-      opacity: 0.65;
-    }
-    .dia-mes-btn.finde:hover {
-      background: #f0eee9;
+      background: #faf7f2;
+      color: #8c7e6c;
+      border-color: #dfd8cb;
     }
     .dia-mes-btn.selected {
       background: #1a1a1a !important;
       color: #f5f5f0 !important;
       border-color: #1a1a1a !important;
     }
-    .dia-mes-btn:hover:not(.selected):not(.finde) { background: #e5e5e0; }
+    .dia-mes-btn:hover:not(.selected) { background: #e5e5e0; }
     .dia-mes-btn .sub-dia {
       font-size: 8px;
       font-weight: 400;
@@ -689,7 +684,7 @@
         <div class="form-row">
           <div style="display:flex;justify-content:space-between;align-items:center;">
             <label style="margin:0;">Días de entrega mensual <span id="labelMesActualCrear" style="font-weight:700;color:#1a1a1a;"></span></label>
-            <span style="font-size:10px;color:#888;">Fines de semana no seleccionables</span>
+            <span style="font-size:10px;color:#888;">Sáb/Dom pasan al Lunes</span>
           </div>
           <div class="dias-mes-header">
             <span>Lun</span><span>Mar</span><span>Mié</span><span>Jue</span><span>Vie</span><span style="color:#b45309;">Sáb</span><span style="color:#dc2626;">Dom</span>
@@ -749,7 +744,7 @@
         <div class="form-row">
           <div style="display:flex;justify-content:space-between;align-items:center;">
             <label style="margin:0;">Días de entrega mensual <span id="labelMesActualEditar" style="font-weight:700;color:#1a1a1a;"></span></label>
-            <span style="font-size:10px;color:#888;">Fines de semana no seleccionables</span>
+            <span style="font-size:10px;color:#888;">Sáb/Dom pasan al Lunes</span>
           </div>
           <div class="dias-mes-header">
             <span>Lun</span><span>Mar</span><span>Mié</span><span>Jue</span><span>Vie</span><span style="color:#b45309;">Sáb</span><span style="color:#dc2626;">Dom</span>
@@ -837,13 +832,11 @@
 
           let subTexto = nombreDiaSem;
           if (esFinde) {
-            btn.title = `El día ${i} es ${nombreDiaSem} (fin de semana). No seleccionable.`;
-            btn.disabled = true;
-          } else {
-            btn.onclick = function() { this.classList.toggle("selected"); };
+            btn.title = `El día ${i} es ${nombreDiaSem} (fin de semana). Se enviará el Lunes siguiente.`;
           }
 
           btn.innerHTML = `<span>${i}</span><span class="sub-dia">${subTexto}</span>`;
+          btn.onclick = function() { this.classList.toggle("selected"); };
           return btn;
         }
 
@@ -1074,11 +1067,11 @@
         if (btn) btn.classList.add("selected");
       });
 
-      // Marcar días mensuales (solo si no caen en fin de semana en el mes actual)
+      // Marcar días mensuales
       const diasMes = Array.isArray(marca.dias_mensuales) ? marca.dias_mensuales : [];
       diasMes.forEach(dia => {
         const dStr = String(parseInt(dia)).padStart(2, "0");
-        const btn = document.querySelector(`#editarDiasMesGrid .dia-mes-btn[data-dia="${dStr}"]:not(:disabled)`);
+        const btn = document.querySelector(`#editarDiasMesGrid .dia-mes-btn[data-dia="${dStr}"]`);
         if (btn) btn.classList.add("selected");
       });
 
