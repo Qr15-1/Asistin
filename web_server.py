@@ -24,7 +24,10 @@ def obtener_todas_las_marcas():
     resultado = []
     marcas_vistas = set()
 
-    # 1. Marcas semanales: agrupa todos los días de la misma marca
+    # Indexar marcas personalizadas/editadas por nombre
+    custom_map = {m["nombre"]: m for m in datos.get("marcas_personalizadas", []) if m.get("nombre")}
+
+    # 1. Marcas semanales estáticas: agrupa todos los días de la misma marca
     marca_sem_info = {}
     for dia_en, asignaciones in CALENDARIO_SEMANAL.items():
         for resp_orig, lista_m in asignaciones.items():
@@ -37,42 +40,78 @@ def obtener_todas_las_marcas():
                     marca_sem_info[m]["dias"].append(dia_en)
 
     for m, info in marca_sem_info.items():
-        resp_actual = asignaciones_custom.get(m, info["resp"])
-        dias_m = [d for d, m_list in DIAS_MENSUALES.items() if m in m_list]
-        dias_es = [DIAS_ES.get(d, d) for d in info["dias"]]
-        freq = "Semanal"
-        if dias_m:
-            freq += f" + Mensual (Día {', '.join(dias_m)})"
-        resultado.append({
-            "nombre": m,
-            "resp": resp_actual,
-            "respNombre": USUARIOS.get(resp_actual, {}).get("nombre", resp_actual),
-            "freq": freq,
-            "dia": ", ".join(dias_es),
-            "dias_semanales": info["dias"],
-            "dias_mensuales": dias_m,
-            "activa": m not in marcas_desactivadas
-        })
+        if m in marcas_vistas:
+            continue
+        
+        # Si la marca fue editada/personalizada, tiene prioridad absoluta en días y frecuencia
+        if m in custom_map:
+            c_info = custom_map[m]
+            resp_actual = asignaciones_custom.get(m, c_info.get("resp", info["resp"]))
+            dias_sem = c_info.get("dias_semanales", [])
+            dias_mes = c_info.get("dias_mensuales", [])
+            resultado.append({
+                "nombre": m,
+                "resp": resp_actual,
+                "respNombre": USUARIOS.get(resp_actual, {}).get("nombre", resp_actual),
+                "freq": c_info.get("freq", "Personalizado"),
+                "dia": c_info.get("dia", "Asignado"),
+                "dias_semanales": dias_sem,
+                "dias_mensuales": dias_mes,
+                "activa": m not in marcas_desactivadas
+            })
+        else:
+            resp_actual = asignaciones_custom.get(m, info["resp"])
+            dias_m = [d for d, m_list in DIAS_MENSUALES.items() if m in m_list]
+            dias_es = [DIAS_ES.get(d, d) for d in info["dias"]]
+            freq = "Semanal"
+            if dias_m:
+                freq += f" + Mensual (Día {', '.join(dias_m)})"
+            resultado.append({
+                "nombre": m,
+                "resp": resp_actual,
+                "respNombre": USUARIOS.get(resp_actual, {}).get("nombre", resp_actual),
+                "freq": freq,
+                "dia": ", ".join(dias_es),
+                "dias_semanales": info["dias"],
+                "dias_mensuales": dias_m,
+                "activa": m not in marcas_desactivadas
+            })
         marcas_vistas.add(m)
 
-    # 2. Marcas únicamente mensuales
+    # 2. Marcas únicamente mensuales estáticas
     for dia_m, lista_m in DIAS_MENSUALES.items():
         for m in lista_m:
             if m not in marcas_vistas and m not in marcas_eliminadas:
-                resp_actual = asignaciones_custom.get(m, obtener_responsable(m))
-                resultado.append({
-                    "nombre": m,
-                    "resp": resp_actual,
-                    "respNombre": USUARIOS.get(resp_actual, {}).get("nombre", resp_actual),
-                    "freq": f"Mensual (Día {dia_m})",
-                    "dia": f"Día {dia_m} del mes",
-                    "dias_semanales": [],
-                    "dias_mensuales": [dia_m],
-                    "activa": m not in marcas_desactivadas
-                })
+                if m in custom_map:
+                    c_info = custom_map[m]
+                    resp_actual = asignaciones_custom.get(m, c_info.get("resp", obtener_responsable(m)))
+                    dias_sem = c_info.get("dias_semanales", [])
+                    dias_mes = c_info.get("dias_mensuales", [])
+                    resultado.append({
+                        "nombre": m,
+                        "resp": resp_actual,
+                        "respNombre": USUARIOS.get(resp_actual, {}).get("nombre", resp_actual),
+                        "freq": c_info.get("freq", "Personalizado"),
+                        "dia": c_info.get("dia", "Asignado"),
+                        "dias_semanales": dias_sem,
+                        "dias_mensuales": dias_mes,
+                        "activa": m not in marcas_desactivadas
+                    })
+                else:
+                    resp_actual = asignaciones_custom.get(m, obtener_responsable(m))
+                    resultado.append({
+                        "nombre": m,
+                        "resp": resp_actual,
+                        "respNombre": USUARIOS.get(resp_actual, {}).get("nombre", resp_actual),
+                        "freq": f"Mensual (Día {dia_m})",
+                        "dia": f"Día {dia_m} del mes",
+                        "dias_semanales": [],
+                        "dias_mensuales": [dia_m],
+                        "activa": m not in marcas_desactivadas
+                    })
                 marcas_vistas.add(m)
 
-    # 3. Marcas dinámicas agregadas desde la Web
+    # 3. Marcas dinámicas agregadas desde la Web que no estaban en los calendarios estáticos
     for m_custom in datos.get("marcas_personalizadas", []):
         m_nombre = m_custom.get("nombre")
         if m_nombre and m_nombre not in marcas_vistas and m_nombre not in marcas_eliminadas:
